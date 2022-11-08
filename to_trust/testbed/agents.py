@@ -49,11 +49,23 @@ class Witness(Agent):
     scores: dict[Provider, float]
     bonus: float
 
-    def __init__(self, *, bonus: float = 1) -> None:
+    def __init__(
+        self,
+        *,
+        bonus: float = 1,
+        honesty: float = 1,
+        ballot_stuffing: bool = False,
+        lying_mode: LyingMode = LyingMode.Bonus,
+        bad_mouthing: bool = False,
+    ) -> None:
         super().__init__()
         self.scores = {}
         self.bonus = bonus
         self.ring = []
+        self.honesty = honesty
+        self.ballot_stuffing = ballot_stuffing
+        self.lying_mode = lying_mode
+        self.bad_mouthing = bad_mouthing
 
     def score_of(self, provider: Provider) -> float:
         if provider not in self.scores:
