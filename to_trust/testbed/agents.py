@@ -10,22 +10,26 @@ class ToDoException(Exception):
 
 
 class Agent(ABC):
-    ring: list[Self]
+    ring: list[object]
+
+    def remove_from_ring(self):
+        self.ring.remove(self)
+        self.ring = []
 
     def update(self):
         pass
 
 
 class Provider(Agent):
-    change: float
+    chance: float
     quality: float
 
     def __init__(self, *, change: float, quality: float) -> None:
-        self.change = change
+        self.chance = change
         self.quality = quality
 
     def get_service(self) -> float:
-        if self.change > random():
+        if self.chance > random():
             return self.quality
         # TODO(Philip): Determine lowest score possible
         # Default cost of service?
@@ -47,6 +51,7 @@ class Witness(Agent):
             self.scores[provider] = 0
 
         if provider in self.ring:
+            # TODO: Provide a fixed value vs real value + bonus
             return self.scores[provider] + self.bonus
         else:
             return self.scores[provider]  # - self.bonus?
@@ -68,9 +73,6 @@ class Consumer(Agent):
         super().__init__()
         self.ntcm = ntcm
         self.scores = {}
-
-    def update(self):
-        return
 
     @staticmethod
     def calc_delta(old_score: float, score: float) -> float:

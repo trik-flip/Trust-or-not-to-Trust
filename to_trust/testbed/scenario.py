@@ -56,3 +56,5 @@ class Scenario(ABC):
         if self.providers is not None:
             return self.providers
         return [Provider(**self.provider_options) for _ in range(self.provider_amount)]  # type: ignore
+
+    # TODO: Define generation functions
