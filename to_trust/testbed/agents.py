@@ -1,7 +1,7 @@
 from abc import ABC
+from enum import Enum
 from math import exp
 from random import random
-from typing_extensions import Self
 
 
 class ToDoException(Exception):
@@ -36,7 +36,16 @@ class Provider(Agent):
         return 0
 
 
+class LyingMode(Enum):
+    Fixed = 1
+    Bonus = 2
+
+
 class Witness(Agent):
+    honesty: float
+    ballot_stuffing: bool
+    lying_mode: LyingMode
+    bad_mouthing: bool
     scores: dict[Provider, float]
     bonus: float
 
@@ -49,12 +58,25 @@ class Witness(Agent):
     def score_of(self, provider: Provider) -> float:
         if provider not in self.scores:
             self.scores[provider] = 0
+        ret_val: float = self.scores[provider]
 
         if provider in self.ring:
-            # TODO: Provide a fixed value vs real value + bonus
-            return self.scores[provider] + self.bonus
+
+            if self.lying_mode == LyingMode.Fixed:
+                return self.bonus
+            else:
+                ret_val += self.bonus if self.ballot_stuffing else 0
         else:
-            return self.scores[provider]  # - self.bonus?
+            if self.lying_mode == LyingMode.Fixed:
+                return 1 - self.bonus
+            else:
+                ret_val -= self.bonus if self.bad_mouthing else 0
+
+        ret_val = max(1, ret_val)
+        if self.honesty > random():
+            return ret_val
+        else:
+            return 1 - ret_val
 
 
 class NovelTrustComputingMethod(ABC):
@@ -112,11 +134,3 @@ class Consumer(Agent):
                 best_score = ntcm_score
 
         return best_provider
-
-
-def updater(
-    testimonies: dict[Witness, float],
-    witness: Witness,
-    provider: Provider,
-):
-    testimonies[witness] = witness.score_of(provider)
