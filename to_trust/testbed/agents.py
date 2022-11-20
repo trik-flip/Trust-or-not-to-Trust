@@ -24,8 +24,8 @@ class Provider(Agent):
     chance: float
     quality: float
 
-    def __init__(self, *, change: float, quality: float) -> None:
-        self.chance = change
+    def __init__(self, *, chance: float, quality: float) -> None:
+        self.chance = chance
         self.quality = quality
 
     def get_service(self) -> float:
@@ -57,6 +57,8 @@ class Witness(Agent):
         ballot_stuffing: bool = False,
         lying_mode: LyingMode = LyingMode.Bonus,
         bad_mouthing: bool = False,
+        starts_lying: bool = False,
+        epochs_before_dishonest: int = 0,
     ) -> None:
         super().__init__()
         self.scores = {}
@@ -66,6 +68,8 @@ class Witness(Agent):
         self.ballot_stuffing = ballot_stuffing
         self.lying_mode = lying_mode
         self.bad_mouthing = bad_mouthing
+        self.starts_lying = starts_lying
+        self.epochs_before_dishonest = epochs_before_dishonest
 
     def score_of(self, provider: Provider) -> float:
         if provider not in self.scores:
@@ -89,6 +93,13 @@ class Witness(Agent):
             return ret_val
         else:
             return 1 - ret_val
+
+    def becomes_dishonest(self):
+        self.honesty = 0
+
+    def update(self, epoch):
+        if self.starts_lying and epoch == self.epochs_before_dishonest:
+            self.becomes_dishonest()
 
 
 class NovelTrustComputingMethod(ABC):

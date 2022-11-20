@@ -47,7 +47,7 @@ class Simulation:
             for consumer in self.consumers:
                 consumer.update()
             for witness in self.witnesses:
-                witness.update()
+                witness.update(_step)
             for provider in self.providers:
                 provider.update()
 
