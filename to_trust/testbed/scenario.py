@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from .agents import Consumer, NovelTrustComputingMethod, Provider, Witness
+from ..agents import Consumer, Provider, Witness
 
 
 class Scenario(ABC):
@@ -44,10 +44,13 @@ class Scenario(ABC):
         self.provider_amount = provider_amount
         self.provider_options = provider_options or {}
 
-    def get_consumers(self, ntcm: NovelTrustComputingMethod) -> list[Consumer]:
+    def get_consumers(
+        self,
+        ntcm: type[Consumer],
+    ) -> list[Consumer]:
         if self.consumers is not None:
             return self.consumers
-        return [Consumer(ntcm=ntcm, **self.consumer_options) for _ in range(self.consumer_amount)]  # type: ignore
+        return [ntcm(**self.consumer_options) for _ in range(self.consumer_amount)]  # type: ignore
 
     def get_witnesses(self) -> list[Witness]:
         if self.witnesses is not None:
@@ -58,6 +61,5 @@ class Scenario(ABC):
         if self.providers is not None:
             return self.providers
         return [Provider(**self.provider_options) for _ in range(self.provider_amount)]  # type: ignore
-
 
     # TODO: Define generation functions
