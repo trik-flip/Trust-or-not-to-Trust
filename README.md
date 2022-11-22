@@ -17,3 +17,7 @@ latter is based on recommendations from other, potentially dishonest agents
 | Margarita Naryzhnyaya |       i6194030 |
 
 **Supervisor**: Gerhard Weiss
+
+# Links
+- [Google Drive](https://drive.google.com/drive/folders/1i-JCcdymV1W-AECnB_mgz8kZPqBzeBcz) 
+- [Paper: Starting point](https://www.ijcai.org/proceedings/2020/0044.pdf)
