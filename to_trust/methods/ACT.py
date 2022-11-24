@@ -1,4 +1,4 @@
-from math import e, log
+from math import e, log, exp
 from random import choice, random
 from ..agents import Witness, Consumer, Provider
 
@@ -210,13 +210,13 @@ worse off by aggregating the direct trust evidence into the estimation
 for the trustworthiness of sj using the latest γij value"""
 
     def _pi_direct(self):
-        return (e**self._p_direct) / (e**self._p_direct + e**self._p_indirect)
+        return exp(self._p_direct) / (exp(self._p_direct) + exp(self._p_indirect))
 
     _p_indirect: float
     """learning parameter"""
 
     def _pi_indirect(self):
-        return (e**self._p_indirect) / (e**self._p_direct + e**self._p_indirect)
+        return exp(self._p_indirect) / (exp(self._p_direct) + exp(self._p_indirect))
 
     def _rep(self, p: Provider, t: int):
         return self._gamma(p) * self._direct_trust(p, t) + (
