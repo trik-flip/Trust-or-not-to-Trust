@@ -2,16 +2,18 @@ from abc import ABC
 from enum import Enum
 from typing import Any
 
-from ..util import ToDoException
+from ..util import ToDoException, profiler
 
 
 class Agent(ABC):
     ring: list[object]
 
+    @profiler.profile
     def remove_from_ring(self):
         self.ring.remove(self)
         self.ring = []
 
+    @profiler.profile
     def update(self, *_: Any) -> None:
         raise ToDoException()
 

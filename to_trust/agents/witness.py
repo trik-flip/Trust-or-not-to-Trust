@@ -1,6 +1,8 @@
 from random import random
-from .agent import Agent, LyingMode
+
+from ..util import profiler
 from . import Provider
+from .agent import Agent, LyingMode
 
 
 class Witness(Agent):
@@ -36,6 +38,7 @@ class Witness(Agent):
         self.starts_lying = starts_lying
         self.epochs_before_dishonest = epochs_before_dishonest
 
+    @profiler.profile
     def score_of(self, provider: Provider) -> float:
         if provider not in self.scores:
             self.scores[provider] = 0
@@ -59,13 +62,16 @@ class Witness(Agent):
         else:
             return 1 - ret_val
 
+    @profiler.profile
     def becomes_dishonest(self):
         self.honesty = 0
 
+    @profiler.profile
     def update(self, epoch: int) -> None:
         if self.starts_lying and epoch == self.epochs_before_dishonest:
             self.becomes_dishonest()
 
+    @profiler.profile
     def register_providers(self, providers: list[Provider]):
         # TODO: what should the value be?
         self.scores = {p: (p.chance * p.quality) - p.cost for p in providers}

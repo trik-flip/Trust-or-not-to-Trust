@@ -1,7 +1,7 @@
-from __future__ import annotations
-
 from abc import ABC
+
 from ..agents import Consumer, Provider, Witness
+from ..util import profiler
 
 
 class Scenario(ABC):
@@ -44,6 +44,7 @@ class Scenario(ABC):
         self.provider_amount = provider_amount
         self.provider_options = provider_options or {}
 
+    @profiler.profile
     def get_consumers(
         self,
         ntcm: type[Consumer],
@@ -52,11 +53,13 @@ class Scenario(ABC):
             return self.consumers
         return [ntcm(**self.consumer_options) for _ in range(self.consumer_amount)]  # type: ignore
 
+    @profiler.profile
     def get_witnesses(self) -> list[Witness]:
         if self.witnesses is not None:
             return self.witnesses
         return [Witness(**self.witness_options) for _ in range(self.witness_amount)]  # type: ignore
 
+    @profiler.profile
     def get_providers(self) -> list[Provider]:
         if self.providers is not None:
             return self.providers

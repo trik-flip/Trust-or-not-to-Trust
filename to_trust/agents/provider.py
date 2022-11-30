@@ -1,4 +1,6 @@
 from random import random
+
+from ..util import profiler
 from .agent import Agent
 
 
@@ -25,6 +27,7 @@ class Provider(Agent):
         self.quality = quality or l_quality + (u_quality - l_quality) * random()
         self.cost = cost or l_cost + (u_cost - l_cost) * random()
 
+    @profiler.profile
     def get_service(self) -> float:
         if self.chance > random():
             return self.quality - self.cost

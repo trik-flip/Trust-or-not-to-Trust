@@ -1,5 +1,5 @@
-from . import Provider, Witness, Agent
-from ..util import ToDoException
+from ..util import ToDoException, profiler
+from . import Agent, Provider, Witness
 
 
 class Consumer(Agent):
@@ -15,22 +15,27 @@ class Consumer(Agent):
         self.providers = {}
         self.scores = {}
 
+    @profiler.profile
     def register_witnesses(self, witnesses: list[Witness]):
         for w in witnesses:
             self.witnesses[w] = None
 
+    @profiler.profile
     def register_providers(self, providers: list[Provider]):
         for p in providers:
             self.providers[p] = None
 
+    @profiler.profile
     def score_of(self, provider: Provider) -> float:
         if provider not in self.scores:
             self.scores[provider] = 0
         return self.scores[provider]
 
+    @profiler.profile
     def update_provider(self, p: Provider, score: float) -> None:
         raise ToDoException()
 
+    @profiler.profile
     def choose_provider(self) -> Provider:
         if len(self.providers) == 0:
             raise ToDoException()
@@ -43,5 +48,6 @@ class Consumer(Agent):
 
         return best_provider
 
+    @profiler.profile
     def update(self, *_):
         return

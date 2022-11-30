@@ -1,6 +1,8 @@
-from math import e, log, exp
+from math import e, exp, log
 from random import choice, random
-from ..agents import Witness, Consumer, Provider
+
+from ..agents import Consumer, Provider, Witness
+from ..util import profiler
 
 
 class Act(Consumer):
@@ -75,6 +77,7 @@ class Act(Consumer):
         self._t = 0
         self._pr = 1
 
+    @profiler.profile
     def update(self):
         self._t += 1
         self._pr = max(self._pr_min, self._pr - 0.2)
@@ -82,11 +85,13 @@ class Act(Consumer):
     _t: int
     """Current timestep"""
 
+    @profiler.profile
     def _gamma(self, p: Provider):
         if self._N(p) < self._N_min:
             return self._N(p) / self._N_min
         return 1
 
+    @profiler.profile
     def _N(self, p: Provider):
         return self._alpha[p] + self._beta[p]
 
@@ -95,6 +100,7 @@ class Act(Consumer):
     """Magnitude"""
 
     @property
+    @profiler.profile
     def _N_min(self):
         return 1 / (2 * self._epsilon**2) * log((1 - self._small_theta) / 2, e)
 
@@ -103,12 +109,14 @@ class Act(Consumer):
     _small_theta: float
     """confidence level"""
 
+    @profiler.profile
     def _direct_trust(self, p: Provider, _t: int):
         return (self._alpha[p] + 1) / (self._alpha[p] + self._beta[p] + 2)
 
     _alpha: dict[Provider, int]
     _beta: dict[Provider, int]
 
+    @profiler.profile
     def _r(self, p: Provider):
         return (
             self._u(p, self._t) * (self._G - p.cost)
@@ -118,6 +126,7 @@ class Act(Consumer):
     _G: float
     """utility derived from a successful interaction"""
 
+    @profiler.profile
     def _u(self, p: Provider, t: int):
         if not self._O[p][t] and self._D[p][t] == 1:
             return 0
@@ -130,12 +139,14 @@ class Act(Consumer):
     _D: dict[Provider, list[int]]
     """The overall decision by ci on whether to interact sj with at time t based on both direct and indirect trust evidence"""
 
+    @profiler.profile
     def _theta(self, w: Witness, p: Provider):
         return (1 / len(self._test[w][p])) * sum(
             self._d(w, p, t) * (1 - self._O[p][t])
             for t, _ in enumerate(self._test[w][p])
         )
 
+    @profiler.profile
     def _d(self, w: Witness, p: Provider, t: int):
         return self._test[w][p][t] >= self._Th
 
@@ -145,6 +156,7 @@ class Act(Consumer):
     """predefined threshold"""
     _p: dict[Witness, dict[Provider, float]]
 
+    @profiler.profile
     def _update_p(self, w: Witness, p: Provider):
         self._p[w][p] = self._p[w][p] + self._rho * (
             self._r(p) - self._r_tilde[p] - self._delta * self._theta(w, p)
@@ -155,23 +167,31 @@ class Act(Consumer):
     _delta: float
     """bias towards penalizing collusion"""
 
+    @profiler.profile
     def _pi(self, w: Witness, p: Provider):
         return (e ** self._p[w][p]) / sum(e ** self._p[_w][p] for _w in self.witnesses)
 
     _r_tilde: dict[Provider, float]
     """total accumulated reward """
 
+    @profiler.profile
     def _update_r_tilde(self, p: Provider):
-        self._r_tilde[p] = self._phi * self._r_tilde[p] + (1 - self._phi) * self._r(p)
+        self._r_tilde[p] = self._phi * \
+            self._r_tilde[p] + (1 - self._phi) * self._r(p)
 
     _phi: float
     """determines the influence of the latest rewards in the smoothed baseline reward"""
 
+    @profiler.profile
     def _indirect_trust(self, p: Provider, t: int):
+        profiler.start("ACT-1")
         top = sum(self._pi(w, p) * w.score_of(p) for w in self.witnesses)
+        profiler.switch("ACT-1", "ACT-2")
         bottom = sum(self._pi(w, p) for w in self.witnesses)
+        profiler.stop("ACT-2")
         return top / bottom
 
+    @profiler.profile
     def _r_direct(self):
         return self._u_tilde(self._t) * self._R + (1 - self._u_tilde(self._t)) * self._P
 
@@ -180,17 +200,20 @@ class Act(Consumer):
     _P: float
     """penalty"""
 
+    @profiler.profile
     def _u_tilde(self, t: int):
         for p in self.providers:
             if self._O[p][t] != self._Dd(p, t):
                 return 0
         return 1
 
+    @profiler.profile
     def _Dd(self, p: Provider, t: int):
         if self._direct_trust(p, t) >= self._Th:
             return True
         return False
 
+    @profiler.profile
     def _update_p_direct(self):
         self._p_direct = self._p_direct + self._rho * (
             self._r_direct() - self._r_tilde_direct
@@ -199,9 +222,11 @@ class Act(Consumer):
     _p_direct: float
     """learning parameter"""
 
+    @profiler.profile
     def _update_r_tilde_direct(self):
         self._r_tilde_direct = (
-            self._phi * self._r_tilde_direct + (1 - self._phi) * self._r_direct()
+            self._phi * self._r_tilde_direct +
+            (1 - self._phi) * self._r_direct()
         )
 
     _r_tilde_direct: float
@@ -209,15 +234,18 @@ class Act(Consumer):
 worse off by aggregating the direct trust evidence into the estimation
 for the trustworthiness of sj using the latest γij value"""
 
+    @profiler.profile
     def _pi_direct(self):
         return exp(self._p_direct) / (exp(self._p_direct) + exp(self._p_indirect))
 
     _p_indirect: float
     """learning parameter"""
 
+    @profiler.profile
     def _pi_indirect(self):
         return exp(self._p_indirect) / (exp(self._p_direct) + exp(self._p_indirect))
 
+    @profiler.profile
     def _rep(self, p: Provider, t: int):
         return self._gamma(p) * self._direct_trust(p, t) + (
             1 - self._gamma(p)
@@ -226,6 +254,7 @@ for the trustworthiness of sj using the latest γij value"""
     _pr: float
     _pr_min: float
 
+    @profiler.profile
     def register_providers(self, providers: list[Provider]):
         super().register_providers(providers)
         self._alpha = {p: 0 for p in providers}
@@ -234,27 +263,32 @@ for the trustworthiness of sj using the latest γij value"""
         self._O = {p: [] for p in providers}
         self._D = {p: [] for p in providers}
 
+    @profiler.profile
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)
         self._p = {w: {p: 0 for p in self.providers} for w in witnesses}
         self._test = {w: {p: [] for p in self.providers} for w in witnesses}
 
+    @profiler.profile
     def choose_provider(self):
         return self._testimony_aggregation()
 
+    @profiler.profile
     def _testimony_aggregation(self):
         exploration_probability = random()  # 2
-        if exploration_probability <= self._pr and len(self._unknown_providers()):  # 3
+        # 3
+        if exploration_probability <= self._pr and len(self._unknown_providers()):
             return choice(self._unknown_providers())  # 4
-        known_sp = self._known_providers()  # 5
-        known_sp.sort(key=lambda p: self._direct_trust(p, self._t), reverse=True)  # 6
+        known_sp = sorted(self._known_providers(), key=lambda p: self._direct_trust(
+            p, self._t), reverse=True)  # 5, 6
         for p in known_sp:  # 7
             for w in self._top_witnesses:
                 self._test[w][p] += [w.score_of(p)]  # 8
         # self.providers = {p: self._rep(p, self._t) for p in self.providers}
-        known_sp.sort(key=lambda p: self._rep(p, self._t), reverse=True)  # 10, 11
-        return known_sp[0]  # 12
+        return sorted(known_sp, key=lambda p: self._rep(
+            p, self._t), reverse=True)[0]  # 10, 11, 12
 
+    @profiler.profile
     def update_provider(self, p: Provider, score: float):
         self._O[p].append(score >= self._Th)
         self._D[p].append(True)
@@ -277,13 +311,15 @@ for the trustworthiness of sj using the latest γij value"""
             self.witnesses[w] = self._pi(w, p)
 
     @property
+    @profiler.profile
     def _top_witnesses(self):
-        witnesses = list(self.witnesses.items())
-        witnesses.sort(key=lambda w: w[1], reverse=True)
+        witnesses = sorted(self.witnesses.items(),
+                           key=lambda w: w[1], reverse=True)
         return [w[0] for w in witnesses[: self._M]]
 
     def _unknown_providers(self):
         return [p for p in self.providers if self._N(p) == 0]
 
+    @profiler.profile
     def _known_providers(self):
         return [p for p in self.providers if self._N(p) != 0]
