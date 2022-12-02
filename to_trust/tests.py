@@ -1,10 +1,12 @@
 from random import seed
 import unittest
 
+import matplotlib.pyplot as plt
+
 from .scenarios.start_lying import StartLying
 
 from .scenarios import HostileEnvironment
-from .methods import Act
+from .methods import Act, Travos
 from .testbed import Simulation
 
 
@@ -76,3 +78,22 @@ class TestBase(unittest.TestCase):
         ]
         self.assertEqual(list(_con_scores), expected_con)
         self.assertEqual(list(_pro_scores), expected_pro)
+
+    def test_Hostile_with_Travos(self):
+        scenario = HostileEnvironment(
+            witness_amount=5,
+            consumer_amount=1,
+            provider_amount=5,
+            provider_options={
+                "chance": 0.7,
+                "l_quality": 0.8,
+                "l_cost": 0.3,
+                "u_cost": 0.6,
+            },
+        )
+        ntcm = Travos
+        sim = Simulation(scenario, ntcm, 200)
+        _con_scores, _pro_scores = sim.run()
+
+        plt.plot(sim.consumers[0].avg_estimation_errors)
+        plt.show()
