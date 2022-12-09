@@ -53,8 +53,9 @@ class Scenario(ABC):
         ntcm: type[Consumer],
     ) -> list[Consumer]:
         if self.consumers is None:
-            self.consumers = [ntcm(**self.consumer_options)
-                              for _ in range(self.consumer_amount)]
+            self.consumers = [
+                ntcm(**self.consumer_options) for _ in range(self.consumer_amount)
+            ]
         return self.consumers
 
     @profiler.profile
@@ -63,15 +64,17 @@ class Scenario(ABC):
             return self.consumers
 
         if self.witnesses is None:
-            self.witnesses = [Witness(**self.witness_options)
-                              for _ in range(self.witness_amount)]
+            self.witnesses = [
+                Witness(**self.witness_options) for _ in range(self.witness_amount)
+            ]
         return self.witnesses
 
     @profiler.profile
     def get_providers(self) -> list[Provider]:
         if self.providers is None:
-            self.providers = [Provider(**self.provider_options)
-                              for _ in range(self.provider_amount)]
+            self.providers = [
+                Provider(**self.provider_options) for _ in range(self.provider_amount)
+            ]
         return self.providers
 
     # TODO: Define generation functions

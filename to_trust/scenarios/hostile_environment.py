@@ -14,7 +14,7 @@ class HostileEnvironment(Scenario):
         consumer_amount: int = 0,
         provider_amount: int = 0,
         provider_options: dict[str, object] | None = None,
-        consumer_as_witness=False
+        consumer_as_witness=False,
     ):
         witnesses: list[Witness] = []
         for _ in range(round(bm_pct * witness_amount)):
@@ -34,5 +34,5 @@ class HostileEnvironment(Scenario):
             consumer_amount=consumer_amount,
             provider_amount=provider_amount,
             provider_options=provider_options,
-            consumer_as_witness=consumer_as_witness
+            consumer_as_witness=consumer_as_witness,
         )

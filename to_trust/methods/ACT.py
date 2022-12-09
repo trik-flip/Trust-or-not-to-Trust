@@ -172,8 +172,7 @@ class Act(Consumer):
 
     @profiler.profile
     def _update_r_tilde(self, p: Provider):
-        self._r_tilde[p] = self._phi * \
-            self._r_tilde[p] + (1 - self._phi) * self._r(p)
+        self._r_tilde[p] = self._phi * self._r_tilde[p] + (1 - self._phi) * self._r(p)
 
     _phi: float
     """determines the influence of the latest rewards in the smoothed baseline reward"""
@@ -189,7 +188,10 @@ class Act(Consumer):
 
     @profiler.profile
     def _r_direct(self):
-        return self._u_tilde(self.epoch) * self._R + (1 - self._u_tilde(self.epoch)) * self._P
+        return (
+            self._u_tilde(self.epoch) * self._R
+            + (1 - self._u_tilde(self.epoch)) * self._P
+        )
 
     _R: float
     """reward"""
@@ -223,8 +225,7 @@ class Act(Consumer):
     @profiler.profile
     def _update_r_tilde_direct(self):
         self._r_tilde_direct = (
-            self._phi * self._r_tilde_direct +
-            (1 - self._phi) * self._r_direct()
+            self._phi * self._r_tilde_direct + (1 - self._phi) * self._r_direct()
         )
 
     _r_tilde_direct: float
@@ -279,8 +280,11 @@ for the trustworthiness of sj using the latest γij value"""
         # 3
         if exploration_probability <= self._pr and len(self._unknown_providers()):
             return choice(self._unknown_providers())  # 4
-        known_sp = sorted(self._known_providers(), key=lambda p: self._direct_trust(
-            p, self.epoch), reverse=True)  # 5, 6
+        known_sp = sorted(
+            self._known_providers(),
+            key=lambda p: self._direct_trust(p, self.epoch),
+            reverse=True,
+        )  # 5, 6
         for p in known_sp:  # 7
             for w in self._top_witnesses:
                 self._test[w][p] += [w.score_of(p)]  # 8
@@ -315,8 +319,7 @@ for the trustworthiness of sj using the latest γij value"""
     @property
     @profiler.profile
     def _top_witnesses(self):
-        witnesses = sorted(self.witnesses.items(),
-                           key=lambda w: w[1], reverse=True)
+        witnesses = sorted(self.witnesses.items(), key=lambda w: w[1], reverse=True)
         return [w[0] for w in witnesses[: self._M]]
 
     def _unknown_providers(self):

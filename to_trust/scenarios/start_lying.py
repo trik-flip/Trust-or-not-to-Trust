@@ -18,7 +18,7 @@ class StartLying(Scenario):
         providers: list[Provider] | None = None,
         provider_amount: int = 0,
         provider_options: dict[str, object] | None = None,
-        consumer_as_witness=False
+        consumer_as_witness=False,
     ):
         self.witness_percentage_lying = witness_percentage_lying
         witnesses: list[Witness] = []
@@ -41,5 +41,5 @@ class StartLying(Scenario):
             providers=providers,
             provider_amount=provider_amount,
             provider_options=provider_options,
-            consumer_as_witness=consumer_as_witness
+            consumer_as_witness=consumer_as_witness,
         )

@@ -4,11 +4,13 @@ from to_trust import Provider, Witness, Consumer
 
 
 class Travos(Consumer):
-    def __init__(self,
-                 epsilon_confidence: float = 0.1,
-                 num_steps_integration: int = 100,
-                 confidence_threshold: float = 0.8,
-                 num_intervals: int = 5):
+    def __init__(
+        self,
+        epsilon_confidence: float = 0.1,
+        num_steps_integration: int = 100,
+        confidence_threshold: float = 0.8,
+        num_intervals: int = 5,
+    ):
         super(Travos, self).__init__()
         self._alphas_p = {}
         self._betas_p = {}
@@ -31,7 +33,9 @@ class Travos(Consumer):
             if w not in self._H.keys():
                 self._H[w] = {}
             for p in self.providers:
-                self._H[w][p] = np.array([], dtype=[('outcome', int), ('expected_value', float)])
+                self._H[w][p] = np.array(
+                    [], dtype=[("outcome", int), ("expected_value", float)]
+                )
 
     def register_providers(self, providers: list[Provider]):
         super(Travos, self).register_providers(providers)
@@ -60,7 +64,7 @@ class Travos(Consumer):
             #                                 <= self._H[w][p][-1]['expected_value']
             #                                 <= self._intervals[bin_idx + 1])
 
-            self._H[w][p][-1]['outcome'] = outcome
+            self._H[w][p][-1]["outcome"] = outcome
 
         if outcome:
             self._alphas_p[p] += 1
@@ -96,8 +100,12 @@ class Travos(Consumer):
                     std = uniform_std_dev + acc * (std - uniform_std_dev)
 
                     # update alpha and beta values according to new expected value and std
-                    alpha += (e_value ** 2 - e_value ** 3) / std ** 2 - e_value - 1
-                    beta += ((1 - e_value) ** 2 - (1 - e_value) ** 3) / std ** 2 - (1 - e_value) - 1
+                    alpha += (e_value**2 - e_value**3) / std**2 - e_value - 1
+                    beta += (
+                        ((1 - e_value) ** 2 - (1 - e_value) ** 3) / std**2
+                        - (1 - e_value)
+                        - 1
+                    )
                 self.providers[provider] = stats.beta.mean(alpha, beta)
 
         self._num_runs += 1
@@ -110,18 +118,27 @@ class Travos(Consumer):
 
             def beta_func(x):
                 return stats.beta.pdf(x, self._alphas_p[p], self._betas_p[p])
-            v1, _ = integrate.quad(beta_func, e_value - self._epsilon_confidence, e_value + self._epsilon_confidence)
+
+            v1, _ = integrate.quad(
+                beta_func,
+                e_value - self._epsilon_confidence,
+                e_value + self._epsilon_confidence,
+            )
             v2, _ = integrate.quad(beta_func, 0, 1)
             res[p] = (v1 / v2, e_value)
         return res
 
     def _accuracy_of_witness(self, p: Provider, w: Witness) -> float:
         score = w.score_of(p)
-        alpha = np.sum(self._H[w][p]['outcome'] == 1) + 1
-        beta = np.sum(self._H[w][p]['outcome'] == 0) + 1
+        alpha = np.sum(self._H[w][p]["outcome"] == 1) + 1
+        beta = np.sum(self._H[w][p]["outcome"] == 0) + 1
 
-        self._H[w][p] = np.append(np.array([(-1, score)], dtype=[('outcome', int), ('expected_value', float)]),
-                                  self._H[w][p])
+        self._H[w][p] = np.append(
+            np.array(
+                [(-1, score)], dtype=[("outcome", int), ("expected_value", float)]
+            ),
+            self._H[w][p],
+        )
 
         # suggestion: use an epsilon environment around score rather than working with static intervals
         # then also update update_provider function
@@ -136,7 +153,10 @@ class Travos(Consumer):
 
         def beta_func(x):
             return stats.beta.pdf(x, alpha, beta)
-        t1, _ = integrate.quad(beta_func, self._intervals[bin_idx], self._intervals[bin_idx + 1])
+
+        t1, _ = integrate.quad(
+            beta_func, self._intervals[bin_idx], self._intervals[bin_idx + 1]
+        )
         t2, _ = integrate.quad(beta_func, 0, 1)
 
         return t1 / t2

@@ -10,6 +10,7 @@ def log(func):
     def new_func(*args, **kwargs):
         print(f"[Running] - {func}")
         return func(*args, **kwargs)
+
     return new_func
 
 
@@ -63,36 +64,45 @@ class Profiler:
             result = func(*args, **kwargs)
             self.stop(name)
             return result
+
         return new_func
 
     def result(self):
         all_times = list(self.funcs.items())
         for _f, v in all_times:
-            v["time per call"] = "not called" if v["hits"] == 0 else v["time"]/v["hits"]
+            v["time per call"] = (
+                "not called" if v["hits"] == 0 else v["time"] / v["hits"]
+            )
         return sorted(all_times, key=lambda x: x[1]["time"], reverse=True)
 
     def show(self, zero_runners=True, min_time=0):
 
-        print("\n", "="*100, "\n")
+        print("\n", "=" * 100, "\n")
         self.print_manual_timers(zero_runners, min_time)
-        print("\n", "="*100, "\n")
+        print("\n", "=" * 100, "\n")
 
     def print_manual_timers(self, zero_runners, min_time):
         if len(self.timers) == 0:
             return
         longest_key = max(len(str(k)) for k in self.timers)
         print(
-            f"[Timer]{' '*(longest_key-7)}\t|\t[time]  \t|\t[hit counts]\t|\t[time per call]")
-        for timer in sorted(self.timers, key=lambda x: self.total_time(x), reverse=True):
+            f"[Timer]{' '*(longest_key-7)}\t|\t[time]  \t|\t[hit counts]\t|\t[time per call]"
+        )
+        for timer in sorted(
+            self.timers, key=lambda x: self.total_time(x), reverse=True
+        ):
             tt = self.total_time(timer)
             ftt = format_time(tt)
             hc = self.timers[timer]["hits"]
-            tpc = "not called" if self.timers[timer]["hits"] == 0 else format_time(
-                tt/hc)
+            tpc = (
+                "not called"
+                if self.timers[timer]["hits"] == 0
+                else format_time(tt / hc)
+            )
 
             if not zero_runners and hc == 0:
                 continue
-            if min_time != 0 and (hc == 0 or tt/hc < min_time):
+            if min_time != 0 and (hc == 0 or tt / hc < min_time):
                 continue
             print(f"{timer:{max(longest_key,7)}}\t|\t{ftt:8}\t|\t{hc:12}\t|\t{tpc}")
 

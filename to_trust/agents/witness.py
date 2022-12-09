@@ -45,23 +45,22 @@ class Witness(Agent):
             self.scores[provider] = 0
         ret_val: float = self.scores[provider]
 
-        if provider in self.ring:
-
-            if self.lying_mode == LyingMode.Fixed:
+        match (provider in self.ring, self.lying_mode):
+            case (True, LyingMode.Fixed):
                 return self.bonus
-            else:
+            case (True, LyingMode.Bonus):
                 ret_val += self.bonus if self.ballot_stuffing else 0
-        else:
-            if self.lying_mode == LyingMode.Fixed:
+            case (False, LyingMode.Fixed):
                 return 1 - self.bonus
-            else:
+            case (False, LyingMode.Bonus):
                 ret_val -= self.bonus if self.bad_mouthing else 0
 
         ret_val = min(1, max(0, ret_val))
-        if self.honesty > random():
-            return ret_val
-        else:
-            return 1 - ret_val
+
+        return ret_val if self.honest() else 1 - ret_val
+
+    def honest(self):
+        return self.honesty > random()
 
     @profiler.profile
     def becomes_dishonest(self):

@@ -10,8 +10,7 @@ class Simulation:
     consumers: list[Consumer]
     providers: list[Provider]
     total_epochs: int
-    runs_data: list[tuple[dict[Consumer, list[float]],
-                          dict[Provider, list[float]]]]
+    runs_data: list[tuple[dict[Consumer, list[float]], dict[Provider, list[float]]]]
     ntcm: type[Consumer]
     scenario: Scenario
 
@@ -21,7 +20,6 @@ class Simulation:
         ntcm: type[Consumer],
         total_epochs: int = 100,
     ):
-        # logging.basicConfig(level=logging.INFO)
         if scenario is None or ntcm is None:
             raise ToDoException()
         logging.info(f"[Init] Creating simulation with ntcm:{ntcm.__name__}")
@@ -48,17 +46,16 @@ class Simulation:
         logging.info("[Clean] sim created from scenario")
 
     @profiler.profile
-    def runs(self, n: int = 5):
-        for _ in range(n):
-            logging.info(f"[Run {_+1}/{n}] Starting")
-            yield self.run()
-            logging.info(f"[Run {_+1}/{n}] Done")
+    def runs(self, n: int = 5, printing=False):
+        for i in range(n):
+            if printing:
+                print(f"Epoch: {i}")
+            yield self.run(printing)
 
     @profiler.profile
-    def run(self):
+    def run(self, printing=False):
         self.clean()
-        true_values: dict[Provider, list[float]] = {
-            p: [] for p in self.providers}
+        true_values: dict[Provider, list[float]] = {p: [] for p in self.providers}
         last_value = {p: 0.0 for p in self.providers}
         scores: dict[Consumer, list[float]] = {
             consumer: [] for consumer in self.consumers
@@ -66,11 +63,12 @@ class Simulation:
         self.setup()
         for _step in range(self.total_epochs):
             profiler.start("Simulation: epoch")
-            logging.info(f"[Epoch: {_step}] Get services from all providers")
+            if printing:
+                print(f"[Epoch: {_step:2}] Get services from all providers")
             for p in self.providers:
                 last_value[p] = p.get_service()
                 true_values[p] += [last_value[p]]
-            logging.info(f"[Epoch: {_step}] consumer pick service providers")
+            logging.info(f"[Epoch: {_step:2}] consumer pick service providers")
             for consumer in self.consumers:
                 chosen_provider = consumer.choose_provider()
                 score = last_value[chosen_provider]
@@ -81,7 +79,7 @@ class Simulation:
                 consumer.update()
             logging.info(f"[Epoch: {_step}] Updating witnesses")
             for witness in self.witnesses:
-                witness.update(_step)
+                witness.update()
             # logging.info(f"[Epoch: {_step}] Updating providers")
             # for provider in self.providers:
             #     provider.update()
