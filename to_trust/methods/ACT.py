@@ -74,16 +74,12 @@ class Act(Consumer):
         self._test = {}
         self._Th = Th
         self._pr_min = pr_min
-        self._t = 0
         self._pr = 1
 
     @profiler.profile
     def update(self):
-        self._t += 1
+        super().update()
         self._pr = max(self._pr_min, self._pr - 0.2)
-
-    _t: int
-    """Current timestep"""
 
     @profiler.profile
     def _gamma(self, p: Provider):
@@ -119,8 +115,8 @@ class Act(Consumer):
     @profiler.profile
     def _r(self, p: Provider):
         return (
-            self._u(p, self._t) * (self._G - p.cost)
-            - (1 - self._u(p, self._t)) * p.cost
+            self._u(p, self.epoch) * (self._G - p.cost)
+            - (1 - self._u(p, self.epoch)) * p.cost
         )
 
     _G: float
@@ -193,7 +189,7 @@ class Act(Consumer):
 
     @profiler.profile
     def _r_direct(self):
-        return self._u_tilde(self._t) * self._R + (1 - self._u_tilde(self._t)) * self._P
+        return self._u_tilde(self.epoch) * self._R + (1 - self._u_tilde(self.epoch)) * self._P
 
     _R: float
     """reward"""
@@ -213,6 +209,7 @@ class Act(Consumer):
             return True
         return False
 
+    # 15, called 0x
     @profiler.profile
     def _update_p_direct(self):
         self._p_direct = self._p_direct + self._rho * (
@@ -222,6 +219,7 @@ class Act(Consumer):
     _p_direct: float
     """learning parameter"""
 
+    # 16, called 0x
     @profiler.profile
     def _update_r_tilde_direct(self):
         self._r_tilde_direct = (
@@ -234,6 +232,7 @@ class Act(Consumer):
 worse off by aggregating the direct trust evidence into the estimation
 for the trustworthiness of sj using the latest γij value"""
 
+    # called 0x
     @profiler.profile
     def _pi_direct(self):
         return exp(self._p_direct) / (exp(self._p_direct) + exp(self._p_indirect))
@@ -241,6 +240,7 @@ for the trustworthiness of sj using the latest γij value"""
     _p_indirect: float
     """learning parameter"""
 
+    # called 0x
     @profiler.profile
     def _pi_indirect(self):
         return exp(self._p_indirect) / (exp(self._p_direct) + exp(self._p_indirect))
@@ -280,13 +280,15 @@ for the trustworthiness of sj using the latest γij value"""
         if exploration_probability <= self._pr and len(self._unknown_providers()):
             return choice(self._unknown_providers())  # 4
         known_sp = sorted(self._known_providers(), key=lambda p: self._direct_trust(
-            p, self._t), reverse=True)  # 5, 6
+            p, self.epoch), reverse=True)  # 5, 6
         for p in known_sp:  # 7
             for w in self._top_witnesses:
                 self._test[w][p] += [w.score_of(p)]  # 8
         # self.providers = {p: self._rep(p, self._t) for p in self.providers}
-        return sorted(known_sp, key=lambda p: self._rep(
-            p, self._t), reverse=True)[0]  # 10, 11, 12
+        for p in self.providers:
+            self.scores[p] = self._rep(p, self.epoch)
+        # 10, 11, 12
+        return sorted(self.scores, key=lambda p: self.scores[p], reverse=True)[0]
 
     @profiler.profile
     def update_provider(self, p: Provider, score: float):

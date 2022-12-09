@@ -56,6 +56,7 @@ class Profiler:
     def profile(self, func):
 
         name = f"Function:{func.__name__}"
+        self.timers[name] = {"start": [], "stop": [], "hits": 0}
 
         def new_func(*args, **kwargs):
             self.start(name)
@@ -91,7 +92,7 @@ class Profiler:
 
             if not zero_runners and hc == 0:
                 continue
-            if tt/hc < min_time:
+            if min_time != 0 and (hc == 0 or tt/hc < min_time):
                 continue
             print(f"{timer:{max(longest_key,7)}}\t|\t{ftt:8}\t|\t{hc:12}\t|\t{tpc}")
 

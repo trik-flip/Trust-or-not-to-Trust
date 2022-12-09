@@ -1,24 +1,26 @@
 import matplotlib.pyplot as plt
 
-from .methods import Act
+from .methods import Act, Travos
 from .scenarios import HostileEnvironment, StartLying
 from .testbed import Simulation
 from .util import profiler
+
 scenario = StartLying(
     witness_amount=5,
     consumer_amount=5,
     provider_amount=20,
     provider_options={"chance": 0.7, "l_quality": 0.8,
                       "l_cost": 0.2, "u_cost": 0.5},
+    consumer_as_witness=True
 )
 
 epochs = 5
 ntcm = Act
 
-simulation = Simulation(scenario, ntcm, 250)
+simulation = Simulation(scenario, ntcm)
 
 profiler.start()
-for consumers, providers in simulation.runs(epochs):
+for consumers, providers in simulation.runs(epochs, True):
     profiler.start("single run")
     print()
     print(
@@ -79,4 +81,4 @@ for consumers, providers in simulation.runs(epochs):
 
 profiler.stop()
 
-profiler.show(False, profiler.ms)
+profiler.show()

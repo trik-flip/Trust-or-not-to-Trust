@@ -1,4 +1,4 @@
-from random import random
+from random import random, choice
 
 from ..util import profiler
 from . import Provider
@@ -27,6 +27,7 @@ class Witness(Agent):
         epochs_before_dishonest: int = 0,
     ) -> None:
         super().__init__()
+        self.epoch = 0
         self.scores = {}
         self.bonus = bonus
         self.ring = []
@@ -67,11 +68,18 @@ class Witness(Agent):
         self.honesty = 0
 
     @profiler.profile
-    def update(self, epoch: int) -> None:
-        if self.starts_lying and epoch == self.epochs_before_dishonest:
+    def update(self) -> None:
+        if self.starts_lying and self.epoch == self.epochs_before_dishonest:
             self.becomes_dishonest()
+        self.epoch += 1
 
     @profiler.profile
     def register_providers(self, providers: list[Provider]):
         # TODO: what should the value be?
         self.scores = {p: (p.chance * p.quality) - p.cost for p in providers}
+
+    def choose_provider(self):
+        return choice(self.scores.keys())
+
+    def update_provider(self, p, score):
+        pass

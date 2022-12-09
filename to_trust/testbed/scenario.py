@@ -30,6 +30,7 @@ class Scenario(ABC):
         providers: list[Provider] | None = None,
         provider_amount: int = 0,
         provider_options: dict[str, object] | None = None,
+        consumer_as_witness=False
     ) -> None:
         super().__init__()
         self.witnesses = witnesses
@@ -44,25 +45,33 @@ class Scenario(ABC):
         self.provider_amount = provider_amount
         self.provider_options = provider_options or {}
 
+        self.consumer_as_witness = consumer_as_witness
+
     @profiler.profile
     def get_consumers(
         self,
         ntcm: type[Consumer],
     ) -> list[Consumer]:
-        if self.consumers is not None:
-            return self.consumers
-        return [ntcm(**self.consumer_options) for _ in range(self.consumer_amount)]  # type: ignore
+        if self.consumers is None:
+            self.consumers = [ntcm(**self.consumer_options)
+                              for _ in range(self.consumer_amount)]
+        return self.consumers
 
     @profiler.profile
     def get_witnesses(self) -> list[Witness]:
-        if self.witnesses is not None:
-            return self.witnesses
-        return [Witness(**self.witness_options) for _ in range(self.witness_amount)]  # type: ignore
+        if self.consumer_as_witness:
+            return self.consumers
+
+        if self.witnesses is None:
+            self.witnesses = [Witness(**self.witness_options)
+                              for _ in range(self.witness_amount)]
+        return self.witnesses
 
     @profiler.profile
     def get_providers(self) -> list[Provider]:
-        if self.providers is not None:
-            return self.providers
-        return [Provider(**self.provider_options) for _ in range(self.provider_amount)]  # type: ignore
+        if self.providers is None:
+            self.providers = [Provider(**self.provider_options)
+                              for _ in range(self.provider_amount)]
+        return self.providers
 
     # TODO: Define generation functions
