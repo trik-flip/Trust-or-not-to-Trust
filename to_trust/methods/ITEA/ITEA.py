@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import math
-from to_trust import Provider
+from to_trust import Provider, Consumer
 
 
 # Predictions: each row is an advisor's prediction for one provider
@@ -18,8 +18,8 @@ def loss_function(real, predicted):
     return (predicted - real) ** 2
 
 
-class ITEA:
-    def itea(
+class ITEA(Consumer):
+    def __init__(
         self,
         recommendations,
         T,

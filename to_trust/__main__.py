@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from .methods import Act, Travos
+from .methods import Act, Travos, ITEA
 from .scenarios import HostileEnvironment, StartLying
 from .testbed import Simulation, Scenario
 from .util import profiler
@@ -17,6 +17,7 @@ scenario = Scenario_type(
 )
 
 simulation = Simulation(scenario, ntcm_type, 50)
+
 
 profiler.start()
 for consumers, providers in simulation.runs(epochs, printing=True):
