@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from .methods import Act, Travos
+from .methods import Act, Travos, ITEA
 from .scenarios import HostileEnvironment, StartLying
 from .testbed import Simulation, Scenario
 from .util import profiler
@@ -8,12 +8,13 @@ from .util import profiler
 scenario = Scenario(
     witness_amount=5,
     provider_amount=20,
+    consumer_amount=1,
     provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
     consumer_as_witness=True,
 )
 
 epochs = 5
-ntcm = Act
+ntcm = ITEA
 
 simulation = Simulation(scenario, ntcm)
 
