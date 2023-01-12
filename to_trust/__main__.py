@@ -10,16 +10,18 @@ scenario = Scenario(
     provider_amount=20,
     consumer_amount=1,
     provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
-    consumer_as_witness=True,
+    consumer_as_witness=False,
 )
 
+# scenario = StartLying
 epochs = 5
 ntcm = ITEA
 
 simulation = Simulation(scenario, ntcm)
 
+
 profiler.start()
-for consumers, providers in simulation.runs(epochs, True):
+for consumers, providers in simulation.runs(epochs, False):
     profiler.start("single run")
     print()
     print(
@@ -81,7 +83,6 @@ for consumers, providers in simulation.runs(epochs, True):
     plt.legend()
     plt.show()
     profiler.stop("single run")
-
 profiler.stop()
 
 profiler.show()
