@@ -72,6 +72,7 @@ class Simulation:
                 witness.update()
             # for provider in self.providers:
             #     provider.update()
+            self.scenario.update(self.providers, self.consumers, self.witnesses)
             profiler.stop("Simulation: epoch")
         self.runs_data.append((scores, true_values))
         return self.last_run

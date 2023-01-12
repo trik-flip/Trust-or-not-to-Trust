@@ -9,6 +9,11 @@ class Agent(ABC):
     ring: list[object]
 
     @profiler.profile
+    def add_to_ring(self,ring):
+        self.ring = ring
+        self.ring.append(self)
+
+    @profiler.profile
     def remove_from_ring(self):
         self.ring.remove(self)
         self.ring = []

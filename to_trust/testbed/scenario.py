@@ -77,4 +77,5 @@ class Scenario(ABC):
             ]
         return self.providers
 
-    # TODO: Define generation functions
+    def update(self, providers, consumers, witnesses):
+        pass

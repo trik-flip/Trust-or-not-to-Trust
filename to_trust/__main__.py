@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 
 from .methods import Act, Travos, ITEA
-from .scenarios import HostileEnvironment, StartLying
+from .scenarios import HostileEnvironment, StartLying, RecruitWitness, FireWitness
 from .testbed import Simulation, Scenario
 from .util import profiler
 
-Scenario_type = HostileEnvironment
+Scenario_type = RecruitWitness
 epochs = 1
 ntcm_type = Act
 
