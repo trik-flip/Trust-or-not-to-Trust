@@ -13,15 +13,17 @@ scenario = Scenario_type(
     consumer_amount=5,
     provider_amount=5,
     provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
-    consumer_as_witness=True,
+    consumer_as_witness=False,
 )
+
 
 simulation = Simulation(scenario, ntcm_type, 50)
 
 
-profiler.start()
-for consumers, providers in simulation.runs(epochs, printing=True):
 
+profiler.start()
+
+for consumers, providers in simulation.runs(epochs, printing=True):
     profiler.start("single run")
     print()
     print(
@@ -83,6 +85,8 @@ for consumers, providers in simulation.runs(epochs, printing=True):
     plt.ylabel("Utility")
     plt.legend()
     plt.show()
+
+
 
 profiler.stop()
 
