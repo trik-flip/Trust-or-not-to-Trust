@@ -64,10 +64,10 @@ class Act(Consumer):
         self._p = {}
         self._p_direct = p_direct
         self._p_indirect = p_indirect
-        self._P = P
+        self._penalty = P
         self._phi = phi
         self._r_tilde = {}
-        self._R = R
+        self._reward = R
         self._r_tilde_direct = r_tilde_direct
         self._rho = rho
         self._small_theta = small_theta
@@ -189,14 +189,12 @@ class Act(Consumer):
     @profiler.profile
     def _r_direct(self):
         return (
-            self._u_tilde(self.epoch) * self._R
-            + (1 - self._u_tilde(self.epoch)) * self._P
+            self._u_tilde(self.epoch) * self._reward
+            + (1 - self._u_tilde(self.epoch)) * self._penalty
         )
 
-    _R: float
-    """reward"""
-    _P: float
-    """penalty"""
+    _reward: float
+    _penalty: float
 
     @profiler.profile
     def _u_tilde(self, t: int):
@@ -229,9 +227,9 @@ class Act(Consumer):
         )
 
     _r_tilde_direct: float
-    """can be treated as a basis for comparing whether c i is better off or
+    """can be treated as a basis for comparing whether c_i is better off or
 worse off by aggregating the direct trust evidence into the estimation
-for the trustworthiness of sj using the latest γij value"""
+for the trustworthiness of s_j using the latest γ_ij value"""
 
     # called 0x
     @profiler.profile
@@ -241,7 +239,6 @@ for the trustworthiness of sj using the latest γij value"""
     _p_indirect: float
     """learning parameter"""
 
-    # called 0x
     @profiler.profile
     def _pi_indirect(self):
         return exp(self._p_indirect) / (exp(self._p_direct) + exp(self._p_indirect))
@@ -315,6 +312,10 @@ for the trustworthiness of sj using the latest γij value"""
         # 17
         for w in self.witnesses:
             self.witnesses[w] = self._pi(w, p)
+
+        self._update_p_direct()
+        self._update_r_tilde_direct()
+        self._update_r_tilde(p)
 
     @property
     @profiler.profile
