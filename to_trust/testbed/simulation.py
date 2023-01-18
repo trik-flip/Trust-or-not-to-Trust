@@ -22,13 +22,8 @@ class Simulation:
     ):
         if scenario is None or ntcm is None:
             raise ToDoException()
-        logging.info(f"[Init] Creating simulation with ntcm:{ntcm.__name__}")
         self.ntcm = ntcm
-        logging.info(
-            f"[Init] Creating simulation with scenario:{type(scenario).__name__}"
-        )
         self.scenario = scenario
-        logging.info(f"[Init] Creating simulation with {total_epochs} epochs")
         self.total_epochs = total_epochs
         self.runs_data = []
 
@@ -39,11 +34,9 @@ class Simulation:
 
     @profiler.profile
     def clean(self):
-        logging.info("[Clean] Creating sim from scenario")
         self.consumers = self.scenario.get_consumers(self.ntcm)
         self.providers = self.scenario.get_providers()
         self.witnesses = self.scenario.get_witnesses()
-        logging.info("[Clean] sim created from scenario")
 
     @profiler.profile
     def runs(self, n: int = 5, printing=False):
@@ -64,35 +57,30 @@ class Simulation:
         for _step in range(self.total_epochs):
             profiler.start("Simulation: epoch")
             if printing:
-                print(f"[Epoch: {_step:2}] Get services from all providers")
+                print(f"[Epoch: {_step:2}]")
             for p in self.providers:
                 last_value[p] = p.get_service()
                 true_values[p] += [last_value[p]]
-            logging.info(f"[Epoch: {_step:2}] consumer pick service providers")
             for consumer in self.consumers:
                 chosen_provider = consumer.choose_provider()
                 score = last_value[chosen_provider]
                 scores[consumer] += [score]
                 consumer.update_provider(chosen_provider, score)
-            logging.info(f"[Epoch: {_step}] Updating consumers")
             for consumer in self.consumers:
                 consumer.update()
-            logging.info(f"[Epoch: {_step}] Updating witnesses")
             for witness in self.witnesses:
                 witness.update()
-            # logging.info(f"[Epoch: {_step}] Updating providers")
             # for provider in self.providers:
             #     provider.update()
+            self.scenario.update(self.providers, self.consumers, self.witnesses)
             profiler.stop("Simulation: epoch")
         self.runs_data.append((scores, true_values))
         return self.last_run
 
     @profiler.profile
     def setup(self):
-        logging.info("[Setup] Registering at all consumers")
         for c in self.consumers:
             c.register_providers(self.providers)
             c.register_witnesses(self.witnesses)
-        logging.info("[Setup] Registering at all witnesses")
         for w in self.witnesses:
             w.register_providers(self.providers)

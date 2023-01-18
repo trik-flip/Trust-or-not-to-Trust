@@ -1,24 +1,29 @@
 import matplotlib.pyplot as plt
 
-from .methods import Act, Travos
-from .scenarios import HostileEnvironment, StartLying
+from .methods import Act, Travos, ITEA
+from .scenarios import HostileEnvironment, StartLying, RecruitWitness, FireWitness
 from .testbed import Simulation, Scenario
 from .util import profiler
 
-scenario = Scenario(
-    witness_amount=5,
-    provider_amount=20,
+Scenario_type = RecruitWitness
+epochs = 1
+ntcm_type = Act
+
+scenario = Scenario_type(
+    consumer_amount=5,
+    provider_amount=5,
     provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
-    consumer_as_witness=True,
+    consumer_as_witness=False,
 )
 
-epochs = 5
-ntcm = Act
 
-simulation = Simulation(scenario, ntcm)
+simulation = Simulation(scenario, ntcm_type, 50)
+
+
 
 profiler.start()
-for consumers, providers in simulation.runs(epochs, True):
+
+for consumers, providers in simulation.runs(epochs, printing=True):
     profiler.start("single run")
     print()
     print(
@@ -39,7 +44,7 @@ for consumers, providers in simulation.runs(epochs, True):
         _p: [sum(_v[:v]) for v in range(len(_v))] for _p, _v in providers.items()
     }
     best_provider = max(producer_list.keys(), key=lambda p: producer_list[p][-1])
-    profiler.switch("main-2", "main-3")
+    profiler.stop("main-2")
 
     consumer_label_set = False
     provider_label_set = False
@@ -51,10 +56,8 @@ for consumers, providers in simulation.runs(epochs, True):
         sum(x) / len(consumer_list.values()) for x in zip(*consumer_list.values())
     ]
 
-    profiler.stop("main-3")
-
-    plt.plot(average_consumer, "-", linewidth=4, label="Average Consumer")
-    plt.plot(average_producer, ":", linewidth=4, label="Average Provider")
+    plt.plot(average_consumer, "-", lw=4, label="Average Consumer")
+    plt.plot(average_producer, ":", lw=4, label="Average Provider")
 
     for consumer in consumers:
         if best_consumer == consumer:
@@ -65,6 +68,7 @@ for consumers, providers in simulation.runs(epochs, True):
                 consumer_label_set = True
             else:
                 plt.plot(consumer_list[consumer], "-g")
+
     for provider in providers:
         if best_provider == provider:
             plt.plot(producer_list[provider], ":c", label="Best Provider")
@@ -74,12 +78,15 @@ for consumers, providers in simulation.runs(epochs, True):
                 provider_label_set = True
             else:
                 plt.plot(producer_list[provider], ":r")
+
+    profiler.stop("single run")
     plt.title("Trust Simulation")
     plt.xlabel("Time step")
     plt.ylabel("Utility")
     plt.legend()
     plt.show()
-    profiler.stop("single run")
+
+
 
 profiler.stop()
 

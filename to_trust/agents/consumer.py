@@ -1,5 +1,5 @@
 from ..util import ToDoException, profiler
-from . import Agent, Provider, Witness
+from . import Provider, Witness
 
 
 class Consumer(Witness):
@@ -44,4 +44,4 @@ class Consumer(Witness):
 
     @profiler.profile
     def update(self, *_):
-        return
+        pass
