@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import math
 from to_trust import Provider, Consumer, Witness
-
+from random import choice
 
 # Predictions: each row is an advisor's prediction for one provider
 # The columns are the predictions for a specific provider
@@ -20,6 +20,23 @@ def loss_function(real, predicted):
 
 
 class ITEA(Consumer):
+    @staticmethod
+    def preprocess(witnesses, providers, epochs = 30000,threshold = .5):
+        for w in witnesses:
+            w.good_interactions = {p:0 for p in providers}
+            w.bad_interactions = {p:0 for p in providers}
+
+        for i in range(epochs):
+            w = choice(witnesses)
+            p = choice(providers)
+            if p.get_service() >= threshold:
+                w.good_interactions[p] += 1
+            else:
+                w.bad_interactions[p] += 1
+        for w in witnesses:
+            for p in providers:
+            
+                w.scores[p] = (w.good_interactions[p] + 1)/(w.good_interactions[p] + w.bad_interactions[p] + 2)
 
     def __init__(
         self,
