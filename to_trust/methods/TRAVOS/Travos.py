@@ -2,161 +2,173 @@ import numpy as np
 from scipy import stats, integrate
 from to_trust import Provider, Witness, Consumer
 
+UNIFORM_STD_DEV = stats.beta.std(1, 1)
+UNIFORM_EXPECTED_VALUE = 0.5
+
 
 class Travos(Consumer):
     def __init__(
-        self,
-        epsilon_confidence: float = 0.1,
-        num_steps_integration: int = 100,
-        confidence_threshold: float = 0.8,
-        num_intervals: int = 5,
+            self,
+            epsilon_confidence: float = 0.2,
+            num_steps_integration: int = 100,
+            confidence_threshold: float = 0.8,
+            num_intervals: int = 5,
+            outcome_threshold: float = 0.5,
     ):
         super(Travos, self).__init__()
         self._alphas_p = {}
         self._betas_p = {}
 
-        self._H = {}
+        self._outcome_history = {}
 
         self._epsilon_confidence = epsilon_confidence
         self._num_steps_integration = num_steps_integration
         self._confidence_threshold = confidence_threshold
+        self._outcome_threshold = outcome_threshold
 
         self._intervals = np.linspace(0, 1, num_intervals + 1)
 
-        # is used to estimate alpha and beta values for the witnesses
-        self._num_runs = 0
         self.avg_estimation_errors = []
+        self.run_index = 0
 
     def register_witnesses(self, witnesses: list[Witness]):
         super(Travos, self).register_witnesses(witnesses)
-        for w in witnesses:
-            if w not in self._H.keys():
-                self._H[w] = {}
-            for p in self.providers:
-                self._H[w][p] = np.array(
-                    [], dtype=[("outcome", int), ("expected_value", float)]
-                )
+        for witness in witnesses:
+            if witness not in self._outcome_history.keys():
+                self._outcome_history[witness] = {}
+            for provider in self.providers:
+                self._outcome_history[witness][provider] = np.array([], dtype=[("run_index", int),
+                                                                               ("outcome", bool),
+                                                                               ("expected_value", float),
+                                                                               ("bin_index", int)])
 
     def register_providers(self, providers: list[Provider]):
         super(Travos, self).register_providers(providers)
-        self._alphas_p = {p: 1 for p in providers}
-        self._betas_p = {p: 1 for p in providers}
+        self._alphas_p = {provider: 1 for provider in providers}
+        self._betas_p = {provider: 1 for provider in providers}
 
     def update(self):
         # update avg estimation error
         avg_estimation_error = 0
-        for p in self.providers.keys():
-            avg_estimation_error += abs(self.providers[p] - p.chance)
+        for provider in self.providers.keys():
+            avg_estimation_error += abs(self.providers[provider] - provider.quality)
         self.avg_estimation_errors.append(avg_estimation_error / len(self.providers))
+        print(self.avg_estimation_errors[-1])
 
-    def update_provider(self, p: Provider, score: float) -> None:
-        outcome = score > -p.cost
-        for w in self._H.keys():
-            # bin_idx = np.argwhere(self._intervals <= score)
-            # if bin_idx.size == 0:
-            #     bin_idx = 0
-            # elif bin_idx.size == self._intervals.size:
-            #     bin_idx = self._intervals.size - 2
-            # else:
-            #     bin_idx = bin_idx[-1][0]
+    def update_provider(self, provider: Provider, score: float) -> None:
+        outcome = score > self._outcome_threshold
 
-            # self._H[w][p][-1]['outcome'] = (self._intervals[bin_idx]
-            #                                 <= self._H[w][p][-1]['expected_value']
-            #                                 <= self._intervals[bin_idx + 1])
-
-            self._H[w][p][-1]["outcome"] = outcome
+        for witness in self.witnesses:
+            relevant_entry = np.argwhere(self._outcome_history[witness][provider]["run_index"] == self.run_index)
+            expected_outcome = self._outcome_history[witness][provider][relevant_entry]["expected_value"] > self._outcome_threshold
+            self._outcome_history[witness][provider][relevant_entry]["outcome"] = expected_outcome == outcome
 
         if outcome:
-            self._alphas_p[p] += 1
+            self._alphas_p[provider] += 1
         else:
-            self._betas_p[p] += 1
+            self._betas_p[provider] += 1
 
     def choose_provider(self) -> Provider:
+        self.run_index += 1
         # calculate confidence values based on own experience
-        confidence_values = self._calc_confidence_values()
+        confidence_values = self._confidence_values_of_providers()
 
-        uniform_std_dev = stats.beta.std(1, 1)
-        uniform_e_value = stats.beta.mean(1, 1)
         for provider, (confidence_value, expected_value) in confidence_values.items():
             # if the confidence value is lower than the threshold take opinions of witnesses into account
-            if confidence_value > self._confidence_threshold:
-                self.providers[provider] = expected_value
-            else:
-                alpha = 1
-                beta = 1
-                for witness in self.witnesses:
-                    # estimate alpha and beta values based on number of runs
-                    # α = μν, β = (1−μ)ν
-                    # ν = α + β
-                    e_value = witness.score_of(provider)
-                    # +2 (because alpha = ... + 1 and beta = ... + 1)
-                    w_alpha = e_value * (self._num_runs + 2)
-                    w_beta = (1 - e_value) * (self._num_runs + 2)
-                    std = stats.beta.std(w_alpha, w_beta)
-
-                    # update expected value and std according to accuracy
-                    acc = self._accuracy_of_witness(provider, witness)
-                    e_value = uniform_e_value + acc * (e_value - uniform_e_value)
-                    std = uniform_std_dev + acc * (std - uniform_std_dev)
-
-                    # update alpha and beta values according to new expected value and std
-                    alpha += (e_value**2 - e_value**3) / std**2 - e_value - 1
-                    beta += (
-                        ((1 - e_value) ** 2 - (1 - e_value) ** 3) / std**2
-                        - (1 - e_value)
-                        - 1
-                    )
-                self.providers[provider] = stats.beta.mean(alpha, beta)
-
-        self._num_runs += 1
+            if confidence_value < self._confidence_threshold:
+                expected_value = self._estimate_value_with_witnesses_opinions(provider, expected_value)
+            self.providers[provider] = expected_value
         return max(self.providers, key=self.providers.get)
 
-    def _calc_confidence_values(self) -> dict[Provider, (float, float)]:
+    def _confidence_values_of_providers(self) -> dict[Provider, (float, float)]:
         res = {}
         for p in self.providers:
-            e_value = stats.beta.mean(self._alphas_p[p], self._betas_p[p])
+            expected_value = stats.beta.expect(args=(self._alphas_p[p], self._betas_p[p]))
 
             def beta_func(x):
                 return stats.beta.pdf(x, self._alphas_p[p], self._betas_p[p])
 
-            v1, _ = integrate.quad(
-                beta_func,
-                e_value - self._epsilon_confidence,
-                e_value + self._epsilon_confidence,
-            )
-            v2, _ = integrate.quad(beta_func, 0, 1)
-            res[p] = (v1 / v2, e_value)
+            expected_area, _ = integrate.quad(beta_func,
+                                              expected_value - self._epsilon_confidence,
+                                              expected_value + self._epsilon_confidence)
+            full_area, _ = integrate.quad(beta_func, 0, 1)
+            res[p] = (expected_area / full_area, expected_value)
         return res
 
-    def _accuracy_of_witness(self, p: Provider, w: Witness) -> float:
-        score = w.score_of(p)
-        alpha = np.sum(self._H[w][p]["outcome"] == 1) + 1
-        beta = np.sum(self._H[w][p]["outcome"] == 0) + 1
-
-        self._H[w][p] = np.append(
-            np.array(
-                [(-1, score)], dtype=[("outcome", int), ("expected_value", float)]
-            ),
-            self._H[w][p],
-        )
-
-        # suggestion: use an epsilon environment around score rather than working with static intervals
-        # then also update update_provider function
-
-        bin_idx = np.argwhere(self._intervals <= score)
-        if bin_idx.size == 0:
-            bin_idx = 0
-        elif bin_idx.size == self._intervals.size:
-            bin_idx = bin_idx[-2][0]
+    def _estimate_value_with_witnesses_opinions(self, provider: Provider, original_expected_value: float):
+        bin_index = np.argwhere(self._intervals < original_expected_value)
+        if bin_index.size == 0:
+            bin_index = 0
+        elif bin_index.size == self._intervals.size:
+            bin_index = bin_index[-2][0]
         else:
-            bin_idx = bin_idx[-1][0]
+            bin_index = bin_index[-1][0]
+
+        alpha = 0
+        beta = 0
+        for witness in self.witnesses:
+            witness_accuracy, witness_expected_value = self._accuracy_of_witness(provider, witness, bin_index)
+
+            # update expected value and standard deviation according to accuracy
+            witness_standard_deviation = 0.15
+
+            adjusted_expected_value = UNIFORM_EXPECTED_VALUE + witness_accuracy * (witness_expected_value - UNIFORM_EXPECTED_VALUE)
+            adjusted_standard_deviation = UNIFORM_STD_DEV + witness_accuracy * (witness_standard_deviation - UNIFORM_STD_DEV)
+
+            # update alpha and beta values according to adjusted expected value and standard deviation
+            adjusted_alpha, adjusted_beta = self._calculate_alpha_beta(adjusted_expected_value,
+                                                                       adjusted_standard_deviation)
+
+            alpha += adjusted_alpha
+            beta += adjusted_beta
+
+        return stats.beta.expect(args=(alpha, beta))
+
+    def _accuracy_of_witness(self, provider: Provider, witness: Witness, bin_idx: int) -> (float, float):
+        # calculate accuracy of witness
+        alpha = 1
+        beta = 1
+
+        relevant_entries = np.argwhere(self._outcome_history[witness][provider]["bin_index"] == bin_idx)
+        alpha += np.sum(self._outcome_history[witness][provider][relevant_entries]["outcome"])
+        beta += np.sum(np.invert(self._outcome_history[witness][provider][relevant_entries]["outcome"]))
+
+        # for (outcome, _, witness_bin_index) in self._outcome_history[witness][provider]:
+        #     # calculate alpha and beta based on previously given values
+        #     # suggestion: use an epsilon environment around score rather than working with static intervals
+        #     if bin_idx == witness_bin_index:
+        #         if outcome:
+        #             alpha += 1
+        #         else:
+        #             beta += 1
+
+        # alpha = max(1, alpha)
+        # beta = max(1, beta)
 
         def beta_func(x):
             return stats.beta.pdf(x, alpha, beta)
 
-        t1, _ = integrate.quad(
-            beta_func, self._intervals[bin_idx], self._intervals[bin_idx + 1]
-        )
-        t2, _ = integrate.quad(beta_func, 0, 1)
+        expected_area, _ = integrate.quad(beta_func,
+                                          self._intervals[bin_idx],
+                                          self._intervals[bin_idx + 1])
+        full_area, _ = integrate.quad(beta_func, 0, 1)
 
-        return t1 / t2
+        # store the provided value of the witness
+        expected_value = witness.score_of(provider)
+        self._outcome_history[witness][provider] = np.append(
+            np.array([(self.run_index, False, expected_value, bin_idx)],
+                     dtype=[("run_index", int),
+                            ("outcome", bool),
+                            ("expected_value", float),
+                            ("bin_index", int)]),
+            self._outcome_history[witness][provider],
+        )
+
+        return expected_area / full_area, expected_value
+
+    @staticmethod
+    def _calculate_alpha_beta(expected_value: float, standard_deviation: float) -> (float, float):
+        alpha = (expected_value ** 2 - expected_value ** 3) / standard_deviation ** 2 - expected_value
+        beta = (((1 - expected_value) ** 2 - (1 - expected_value) ** 3) /
+                standard_deviation ** 2 - (1 - expected_value))
+        return alpha, beta
