@@ -81,19 +81,22 @@ class TestBase(unittest.TestCase):
 
     def test_Hostile_with_Travos(self):
         scenario = HostileEnvironment(
-            witness_amount=5,
+            witness_amount=20,
             consumer_amount=1,
-            provider_amount=5,
+            provider_amount=101,
             provider_options={
-                "chance": 0.7,
-                "l_quality": 0.8,
-                "l_cost": 0.3,
-                "u_cost": 0.6,
+                "chance": 1,
+                "cost": 0,
             },
+            simple_lying=True
         )
         ntcm = Travos
         sim = Simulation(scenario, ntcm, 200)
-        _con_scores, _pro_scores = sim.run()
 
-        plt.plot(sim.consumers[0].avg_estimation_errors)
-        plt.show()
+        try:
+            _con_scores, _pro_scores = sim.run(True)
+        except KeyboardInterrupt:
+            plt.plot(sim.consumers[0].avg_estimation_errors)
+            plt.ylabel("mean estimation error")
+            plt.xlabel("num. interactions")
+            plt.savefig("hostile_travos.png")
