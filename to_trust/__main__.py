@@ -1,37 +1,18 @@
 import matplotlib.pyplot as plt
 
-from .methods import Act, Travos, ITEA
-from .scenarios import HostileEnvironment, StartLying, RecruitWitness, FireWitness
-from .testbed import Simulation, Scenario
 from .util import profiler
+from .metrics import MetricSystem
+from .settings import simulation, epochs, runs
 
-Scenario_type = RecruitWitness
-epochs = 1
-ntcm_type = Act
-
-scenario = Scenario_type(
-    consumer_amount=5,
-    provider_amount=5,
-    provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
-    consumer_as_witness=False,
-)
-
-
-simulation = Simulation(scenario, ntcm_type, 50)
-
-
-
+sensor = MetricSystem()
 profiler.start()
 
 for consumers, providers in simulation.runs(epochs, printing=True):
+    sensor.measure(consumers, providers, runs)
     profiler.start("single run")
     print()
-    print(
-        f"Consumer Average: {sum(sum(consumers[_c]) for _c in consumers )/len(consumers):.2f}"
-    )
-    print(
-        f"Provider Average: {sum(sum(providers[_p]) for _p in providers)/len(providers):.2f}"
-    )
+    print(f"Consumer Average: {sensor.average(consumers):.2f}")
+    print(f"Provider Average: {sensor.average(providers):.2f}")
 
     profiler.start("main-1")
     consumer_list = {
@@ -85,7 +66,6 @@ for consumers, providers in simulation.runs(epochs, printing=True):
     plt.ylabel("Utility")
     plt.legend()
     plt.show()
-
 
 
 profiler.stop()
