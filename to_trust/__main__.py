@@ -4,6 +4,7 @@ from .util import profiler
 from .metrics import MetricSystem
 from .settings import simulation, epochs, runs
 
+
 sensor = MetricSystem()
 profiler.start()
 
@@ -14,18 +15,15 @@ for consumers, providers in simulation.runs(epochs, printing=True):
     print(f"Consumer Average: {sensor.average(consumers):.2f}")
     print(f"Provider Average: {sensor.average(providers):.2f}")
 
-    profiler.start("main-1")
     consumer_list = {
         _c: [sum(_v[:v]) for v in range(len(_v))] for _c, _v in consumers.items()
-    }
+    } # get the compounded list per consumer which contains the values
     best_consumer = max(consumer_list.keys(), key=lambda c: consumer_list[c][-1])
-    profiler.switch("main-1", "main-2")
 
     producer_list = {
         _p: [sum(_v[:v]) for v in range(len(_v))] for _p, _v in providers.items()
-    }
+    } # Same but then for the providers
     best_provider = max(producer_list.keys(), key=lambda p: producer_list[p][-1])
-    profiler.stop("main-2")
 
     consumer_label_set = False
     provider_label_set = False
@@ -70,4 +68,3 @@ for consumers, providers in simulation.runs(epochs, printing=True):
 
 profiler.stop()
 
-profiler.show()

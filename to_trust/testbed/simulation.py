@@ -54,6 +54,7 @@ class Simulation:
             consumer: [] for consumer in self.consumers
         }
         self.setup()
+        self.ntcm.preprocess(self.witnesses, self.providers)
         for _step in range(self.total_epochs):
             profiler.start("Simulation: epoch")
             if printing:
