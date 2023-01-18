@@ -3,11 +3,9 @@ import unittest
 
 import matplotlib.pyplot as plt
 
-from .scenarios.start_lying import StartLying
-
-from .scenarios import HostileEnvironment
-from .methods import Act, Travos
-from .testbed import Simulation
+from to_trust.scenarios import HostileEnvironment, StartLying
+from to_trust.methods import Act, Travos
+from to_trust.testbed import Simulation
 
 
 class TestBase(unittest.TestCase):
@@ -27,8 +25,7 @@ class TestBase(unittest.TestCase):
                 "u_cost": 0.6,
             },
         )
-        ntcm = Act
-        sim = Simulation(scenario, ntcm, 1000)
+        sim = Simulation(scenario, Act, 1000)
         _con_scores, _pro_scores = sim.run()
         expected_con = [
             341.8534185781679,
@@ -59,8 +56,7 @@ class TestBase(unittest.TestCase):
                 "u_cost": 0.6,
             },
         )
-        ntcm = Act
-        sim = Simulation(scenario, ntcm, 1000)
+        sim = Simulation(scenario, Act, 1000)
         _con_scores, _pro_scores = sim.run()
         expected_con = [
             341.8534185781679,
@@ -91,9 +87,13 @@ class TestBase(unittest.TestCase):
                 "u_cost": 0.6,
             },
         )
-        ntcm = Travos
-        sim = Simulation(scenario, ntcm, 200)
+        sim = Simulation(scenario, Travos, 200)
         _con_scores, _pro_scores = sim.run()
 
         plt.plot(sim.consumers[0].avg_estimation_errors)
         plt.show()
+
+
+if __name__ == "__main__":
+    unittest.main()
+
