@@ -1,84 +1,128 @@
 from __future__ import annotations
 
+import random
+
 import numpy as np
 import math
 from to_trust import Provider, Consumer, Witness
 
+from util import profiler
 
-# Predictions: each row is an advisor's prediction for one provider
-# The columns are the predictions for a specific provider
+
 def current_prediction(recommendations, weights):
-    weight = np.array(recommendations) * np.array(weights)
-    sum_recommendations = sum(weight)
+    recommendations = [r for r in recommendations]
+    weights = [weight for weight in weights]
+    weighted_sum = sum(np.array(recommendations) * np.array(weights))
     sum_weights = sum(weights)
-    predictions = sum_recommendations / sum_weights
+    predictions = weighted_sum / sum_weights
     return predictions
 
 
 def loss_function(real, predicted):
-    return (predicted - real) ** 2
+    """
+        Squared error loss for 2 values
+    """
+    return (real - predicted) ** 2
+
+
+def mean_absolute_error(real, predicted):
+    """
+        For experiments
+    """
+    return np.mean(np.abs(real - predicted))
+
+def beta_reputation_system():
+    """
+        for a provider: b(p, n) = (p+1)/(p+n+2)
+    """
 
 
 class ITEA(Consumer):
 
     def __init__(
-        self,
-        # witnesses: int=0,
-        T: float= 100,
-        # prov: list[Provider] | None = None,
-        learning_rate: float=0.5
+            self,
+            T: float = 100,
     ) -> None:
         super().__init__()
+        self.learning_rate = None
+        self.interactions = None
+        self.K = None
         self.T = T
         self.weights = []
-
-        # self.K = len(witnesses)
+        self.loss = []
 
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)
+        
         self.K = len(witnesses)
         self.learning_rate = math.sqrt((8 * math.log(self.K)) / self.T)
-        self.weights = np.ones(self.K) / self.K  # first weight = 1/K
-        self.weights = [[self.weights[i] for i in range(len(self.weights))] for j in range(len(self.providers))]
+        self.weights = {}
+        for provider in self.providers:
+            self.weights[provider] = {w: 1/self.K for w in self.witnesses}
 
-
+        self.preprocessing()
 
     def update_provider(self, p: Provider, score: float) -> None:
-        self.prov = []
+        self.interactions[p] = score
 
     def register_providers(self, providers: list[Provider]):
         super().register_providers(providers)
-        self.providerss = providers
-        self._alphas_p = {p: 1 for p in providers}
-        self._betas_p = {p: 1 for p in providers}
+        self.interactions = {p: 0 for p in providers}
+
+    @profiler.profile
+    def choose_provider(self):
+        predictions_for_providers = dict()
+        witnesses_recommendations = dict()
+
+        for p in self.providers.keys():
+            witness_recommendations = dict()
+            for witness in self.witnesses:
+                witness_recommendations[witness] = witness.score_of(p)
+            own_prediction = current_prediction(witness_recommendations.values(), self.weights[p].values())
+            witnesses_recommendations[p] = witness_recommendations
+            predictions_for_providers[p] = own_prediction
+
+        # Get the value of the highest prediction
+        max_prediction = max(predictions_for_providers.values())
+
+        # If more than 1 candidate -> choose 1 at random
+        max_providers = [k for k, v in predictions_for_providers.items() if v == max_prediction]
+        highest_provider = random.choice(max_providers)
+
+        return highest_provider
 
     def update(self):
-        """    Update the weights etc
-                Make the choice
-                Must be called after each timestep
         """
-        prediction_for_provider = []
-        witnesses_recommendations = []
-        for provider_index in range(len(self.providerss)):
-            witness_recommendations = []
+            Update the weights etc
+            Make the choice
+            Must be called after each timestep
+        """
+        super().update()
+        predictions_for_providers = dict()
+        witnesses_recommendations = dict()
+
+        for p in self.providers.keys():
+            witness_recommendations = dict()
             for witness in self.witnesses:
-                witness_recommendations.append(witness.score_of(self.providerss[provider_index]))
+                witness_recommendations[witness] = witness.score_of(p)
+            own_prediction = current_prediction(witness_recommendations.values(), self.weights[p].values())
+            witnesses_recommendations[p] = witness_recommendations
+            predictions_for_providers[p] = own_prediction
 
-            own_prediction = current_prediction(witness_recommendations, self.weights[provider_index])
-            witnesses_recommendations.append(witness_recommendations)
-            prediction_for_provider.append(own_prediction)
+        # Get the value of the highest prediction
+        max_prediction = max(predictions_for_providers.values())
 
-        # Pick the provider with the highest prediction
-        highest_provider = np.argmax(prediction_for_provider)
+        # If more than 1 candidate -> choose 1 at random
+        max_providers = [k for k, v in predictions_for_providers.items() if v == max_prediction]
+        highest_provider = random.choice(max_providers)
 
         # Observe the outcome
-        provider_outcome = self.providerss[highest_provider].get_service()
+        highest_provider_actual = self.interactions[highest_provider]
+        self.loss.append(loss_function(highest_provider_actual, max_prediction))
 
-        ## Consumer suffers loss - loss from consumers preditions and the real prediciton
-        consumer_loss= loss_function(provider_outcome, prediction_for_provider[highest_provider])
+        for witness in self.witnesses:
+            witness_loss = loss_function(highest_provider_actual, witnesses_recommendations[highest_provider][witness])
+            # Update weights for the witness
+            exp = -self.learning_rate * witness_loss
+            self.weights[highest_provider][witness] = self.weights[highest_provider][witness]  * math.exp(exp)
 
-        ## Witness suffers loss - loss from value from witness and the real
-        # update weight of advisers
-        for witness_index in range(len(self.witnesses)):
-            witness_loss = loss_function(provider_outcome, witnesses_recommendations[highest_provider][witness_index])
-            self.weights[highest_provider][witness_index] = self.weights[witness_index][highest_provider]*math.exp(-self.learning_rate*witness_loss)
