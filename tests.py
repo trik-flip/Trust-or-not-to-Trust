@@ -4,17 +4,9 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-<<<<<<< HEAD:to_trust/tests.py
-from .scenarios.start_lying import StartLying
-
-from .scenarios import HostileEnvironment
-from .methods import Act, Travos, ITEA
-from .testbed import Simulation
-=======
 from to_trust.scenarios import HostileEnvironment, StartLying
 from to_trust.methods import Act, Travos
 from to_trust.testbed import Simulation
->>>>>>> refs/remotes/origin/main:tests.py
 
 
 class TestBase(unittest.TestCase):
