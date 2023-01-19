@@ -7,6 +7,9 @@ class Consumer(Witness):
     scores: dict[Provider, float]
     providers: dict[Provider, float | None]
 
+    @staticmethod
+    def preprocess(witnesses, providers):
+        pass
     def __init__(
         self,
     ) -> None:

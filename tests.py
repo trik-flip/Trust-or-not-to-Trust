@@ -4,11 +4,17 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+<<<<<<< HEAD:to_trust/tests.py
 from .scenarios.start_lying import StartLying
 
 from .scenarios import HostileEnvironment
 from .methods import Act, Travos, ITEA
 from .testbed import Simulation
+=======
+from to_trust.scenarios import HostileEnvironment, StartLying
+from to_trust.methods import Act, Travos
+from to_trust.testbed import Simulation
+>>>>>>> refs/remotes/origin/main:tests.py
 
 
 class TestBase(unittest.TestCase):
@@ -28,8 +34,7 @@ class TestBase(unittest.TestCase):
                 "u_cost": 0.6,
             },
         )
-        ntcm = Act
-        sim = Simulation(scenario, ntcm, 1000)
+        sim = Simulation(scenario, Act, 1000)
         _con_scores, _pro_scores = sim.run()
         expected_con = [
             341.8534185781679,
@@ -60,8 +65,7 @@ class TestBase(unittest.TestCase):
                 "u_cost": 0.6,
             },
         )
-        ntcm = Act
-        sim = Simulation(scenario, ntcm, 1000)
+        sim = Simulation(scenario, Act, 1000)
         _con_scores, _pro_scores = sim.run()
         expected_con = [
             341.8534185781679,
@@ -82,20 +86,30 @@ class TestBase(unittest.TestCase):
 
     def test_Hostile_with_Travos(self):
         scenario = HostileEnvironment(
-            witness_amount=5,
+            witness_amount=20,
             consumer_amount=1,
-            provider_amount=5,
+            provider_amount=101,
             provider_options={
-                "chance": 0.7,
-                "l_quality": 0.8,
-                "l_cost": 0.3,
-                "u_cost": 0.6,
+                "chance": 1,
+                "cost": 0,
             },
+            simple_lying=True
         )
-        ntcm = Travos
-        sim = Simulation(scenario, ntcm, 200)
-        _con_scores, _pro_scores = sim.run()
+        sim = Simulation(scenario, Travos, 200)
 
+        try:
+            _con_scores, _pro_scores = sim.run(True)
+        except KeyboardInterrupt:
+            plt.plot(sim.consumers[0].avg_estimation_errors)
+            plt.ylabel("mean estimation error")
+            plt.xlabel("num. interactions")
+            plt.savefig("hostile_travos.png")
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+<<<<<<< HEAD:to_trust/tests.py
         plt.plot(sim.consumers[0].avg_estimation_errors)
         plt.show()
 
@@ -173,3 +187,5 @@ class TestBase(unittest.TestCase):
         _con_scores, _pro_score = sim.run()
         ntcm.preprocessing()
 
+=======
+>>>>>>> refs/remotes/origin/main:tests.py

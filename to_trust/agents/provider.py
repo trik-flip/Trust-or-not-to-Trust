@@ -23,9 +23,9 @@ class Provider(Agent):
         u_cost: float = 1,
     ) -> None:
 
-        self.chance = chance or l_chance + (u_chance - l_chance) * random()
-        self.quality = quality or l_quality + (u_quality - l_quality) * random()
-        self.cost = cost or l_cost + (u_cost - l_cost) * random()
+        self.chance = chance if chance is not None else l_chance + (u_chance - l_chance) * random()
+        self.quality = quality if quality is not None else l_quality + (u_quality - l_quality) * random()
+        self.cost = cost if cost is not None else l_cost + (u_cost - l_cost) * random()
 
     @profiler.profile
     def get_service(self) -> float:
