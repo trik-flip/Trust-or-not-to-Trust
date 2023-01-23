@@ -81,8 +81,6 @@ class ITEA(Consumer):
         for provider in self.providers:
             self.weights[provider] = {w: 1 / self.K for w in self.witnesses}
 
-        self.preprocessing()
-
     def update_provider(self, p: Provider, score: float) -> None:
         self.interactions[p] = score
 

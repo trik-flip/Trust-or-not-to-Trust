@@ -31,7 +31,6 @@ class Witness(Agent):
         self.epoch = 0
         self.scores = {}
         self.bonus = bonus
-        self.ring = []
         self.honesty = honesty
         self.ballot_stuffing = ballot_stuffing
         self.lying_mode = lying_mode

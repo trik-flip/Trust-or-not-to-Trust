@@ -11,6 +11,7 @@ class Consumer(Witness):
 
     @staticmethod
     def preprocess(witnesses, providers):
+        """This function can be implemented if something like a Ring needs to be prepared"""
         pass
 
     def __init__(

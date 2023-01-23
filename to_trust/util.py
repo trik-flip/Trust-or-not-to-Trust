@@ -1,10 +1,11 @@
 from time import time_ns
+from typing import Any, Callable
 
 
 class Singleton(type):
-    _instances = {}
+    _instances: dict[type, object] = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args: Any, **kwargs: dict[str, Any]):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -15,8 +16,8 @@ class ToDoException(Exception):
         return f"This method is not implemented!"
 
 
-def log(func):
-    def new_func(*args, **kwargs):
+def log(func: Callable[[Any], Any]):
+    def new_func(*args: Any, **kwargs: dict[str, Any]):
         print(f"[Running] - {func}")
         return func(*args, **kwargs)
 
@@ -31,44 +32,44 @@ class Profiler:
 
     def __init__(self) -> None:
         self.funcs = {}
-        self.timers = {}
+        self.timers: dict[str, dict[str, list[int] | int]] = {}
 
-    def switch(self, name1, name2):
+    def switch(self, name1: str, name2: str):
         self.stop(name1)
         self.start(name2)
 
-    def start(self, name="main"):
+    def start(self, name: str = "main"):
         if name not in self.timers:
             self.timers[name] = {"start": [], "stop": [], "hits": 0}
 
-        self.timers[name]["start"] += [time_ns()]
+        self.timers[name]["start"] += [time_ns()]  # type: ignore
 
-    def stop(self, name="main"):
+    def stop(self, name: str = "main"):
         if name not in self.timers:
             raise Exception(f"{name} is not a valid timer")
 
-        self.timers[name]["stop"] += [time_ns()]
-        self.timers[name]["hits"] += 1
+        self.timers[name]["stop"] += [time_ns()]  # type: ignore
+        self.timers[name]["hits"] += 1  # type: ignore
 
-    def total_time(self, name="main"):
+    def total_time(self, name: str = "main") -> int:
         if name not in self.timers:
             raise Exception(f"{name} is not a valid timer")
 
-        if len(self.timers[name]["start"]) != self.timers[name]["hits"]:
+        if len(self.timers[name]["start"]) != self.timers[name]["hits"]:  # type: ignore
             print(f"[WARNING] - {name} timer is not stopped")
             return 0
 
         total = 0
-        for start, stop in zip(self.timers[name]["start"], self.timers[name]["stop"]):
-            total += stop - start
-        return total
+        for start, stop in zip(self.timers[name]["start"], self.timers[name]["stop"]):  # type: ignore
+            total += stop - start  # type: ignore
+        return total  # type: ignore
 
-    def profile(self, func):
+    def profile(self, func: Callable[[Any], Any]):
 
         name = f"Function:{func.__name__}"
         self.timers[name] = {"start": [], "stop": [], "hits": 0}
 
-        def new_func(*args, **kwargs):
+        def new_func(*args: Any, **kwargs: dict[str, Any]):
             self.start(name)
             result = func(*args, **kwargs)
             self.stop(name)
@@ -77,20 +78,20 @@ class Profiler:
         return new_func
 
     def result(self):
-        all_times = list(self.funcs.items())
+        all_times: list[tuple[Any, Any]] = list(self.funcs.items())  # type: ignore
         for _f, v in all_times:
             v["time per call"] = (
                 "not called" if v["hits"] == 0 else v["time"] / v["hits"]
             )
         return sorted(all_times, key=lambda x: x[1]["time"], reverse=True)
 
-    def show(self, zero_runners=True, min_time=0):
+    def show(self, zero_runners: bool = True, min_time: int = 0):
 
         print("\n", "=" * 100, "\n")
         self.print_manual_timers(zero_runners, min_time)
         print("\n", "=" * 100, "\n")
 
-    def print_manual_timers(self, zero_runners, min_time):
+    def print_manual_timers(self, zero_runners: bool, min_time: int):
         if len(self.timers) == 0:
             return
         longest_key = max(len(str(k)) for k in self.timers)
@@ -106,17 +107,17 @@ class Profiler:
             tpc = (
                 "not called"
                 if self.timers[timer]["hits"] == 0
-                else format_time(tt / hc)
+                else format_time(tt / hc)  # type: ignore
             )
 
             if not zero_runners and hc == 0:
                 continue
-            if min_time != 0 and (hc == 0 or tt / hc < min_time):
+            if min_time != 0 and (hc == 0 or tt / hc < min_time):  # type: ignore
                 continue
             print(f"{timer:{max(longest_key,7)}}\t|\t{ftt:8}\t|\t{hc:12}\t|\t{tpc}")
 
 
-def format_time(x):
+def format_time(x: int):
     if isinstance(x, str):
         return x
     if x > 1_000_000_000:

@@ -2,18 +2,17 @@ from .methods import ITEA, Act, Travos
 from .scenarios import FireWitness, HostileEnvironment, RecruitWitness, StartLying
 from .testbed import Simulation
 
-Scenario_type = HostileEnvironment
+Scenario_type = RecruitWitness
 epochs = 2
-runs = 500
+runs = 50
 ntcm_type = Act
 
 # Plotting settings
+plot_run = False
 plot_average = True
 line_alpha = 0.2
 
 scenario = Scenario_type(
-    bm_pct=0.2,
-    bs_pct=0.2,
     consumer_amount=10,
     provider_amount=25,
     witness_amount=100,

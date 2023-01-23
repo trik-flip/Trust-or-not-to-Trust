@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from .metrics import MetricSystem
-from .settings import epochs, line_alpha, plot_average, runs, simulation
+from .settings import epochs, line_alpha, plot_average, runs, simulation, plot_run
 from .util import profiler
 
 sensor = MetricSystem()
@@ -16,12 +16,12 @@ for consumers, providers in simulation.runs(epochs, printing=True):
 
     consumer_list = {
         _c: [sum(_v[:v]) for v in range(len(_v))] for _c, _v in consumers.items()
-    } # get the compounded list per consumer which contains the values
+    }  # get the compounded list per consumer which contains the values
     best_consumer = max(consumer_list.keys(), key=lambda c: consumer_list[c][-1])
 
     producer_list = {
         _p: [sum(_v[:v]) for v in range(len(_v))] for _p, _v in providers.items()
-    } # Same but then for the providers
+    }  # Same but then for the providers
     best_provider = max(producer_list.keys(), key=lambda p: producer_list[p][-1])
 
     consumer_label_set = False
@@ -43,7 +43,9 @@ for consumers, providers in simulation.runs(epochs, printing=True):
             plt.plot(consumer_list[consumer], "-b", label="Best Consumer")
         else:
             if not consumer_label_set:
-                plt.plot(consumer_list[consumer], "-g", label="Consumer", alpha=line_alpha)
+                plt.plot(
+                    consumer_list[consumer], "-g", label="Consumer", alpha=line_alpha
+                )
                 consumer_label_set = True
             else:
                 plt.plot(consumer_list[consumer], "-g", alpha=line_alpha)
@@ -53,7 +55,9 @@ for consumers, providers in simulation.runs(epochs, printing=True):
             plt.plot(producer_list[provider], ":c", label="Best Provider")
         else:
             if not provider_label_set:
-                plt.plot(producer_list[provider], ":r", label="Provider", alpha=line_alpha)
+                plt.plot(
+                    producer_list[provider], ":r", label="Provider", alpha=line_alpha
+                )
                 provider_label_set = True
             else:
                 plt.plot(producer_list[provider], ":r", alpha=line_alpha)
@@ -63,8 +67,9 @@ for consumers, providers in simulation.runs(epochs, printing=True):
     plt.xlabel("Time step")
     plt.ylabel("Accumulated Utility")
     plt.legend()
-    plt.show()
+    if plot_run:
+        plt.show()
 
 
 profiler.stop()
-
+profiler.show()

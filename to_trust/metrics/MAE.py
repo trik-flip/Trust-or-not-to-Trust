@@ -1,10 +1,12 @@
-from to_trust.agents.consumer import Consumer
+from to_trust.agents import Consumer, Provider
 
 from .metrics import MetricSystem
 
 
 @MetricSystem.register("MAE")
-def MAE(consumers: dict[Consumer, float], providers, epochs):
+def MAE(
+    consumers: dict[Consumer, float], providers: dict[Provider, float], epochs: int
+):
     T = epochs
     N = len(consumers)
     total = 0.0
