@@ -21,6 +21,7 @@ class Consumer(Witness):
         self.witnesses = {}
         self.providers = {}
         self.scores = {}
+        self.MAE = []
 
     @profiler.profile
     def register_witnesses(self, witnesses: list[Witness]):

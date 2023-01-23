@@ -290,6 +290,11 @@ for the trustworthiness of s_j using the latest γ_ij value"""
 
     @profiler.profile
     def update_provider(self, p: Provider, score: float):
+
+        current_error = abs(score - self.score_of(p))
+        total_error = sum(self.MAE)
+        self.MAE.append((current_error + total_error) / (len(self.MAE) + 1))
+
         self._O[p].append(score >= self._Th)
         self._D[p].append(True)
         for _p in self.providers:

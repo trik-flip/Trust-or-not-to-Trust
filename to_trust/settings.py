@@ -3,12 +3,12 @@ from .scenarios import FireWitness, HostileEnvironment, RecruitWitness, StartLyi
 from .testbed import Simulation
 
 Scenario_type = RecruitWitness
-epochs = 2
+epochs = 1
 runs = 50
 ntcm_type = Act
 
 # Plotting settings
-plot_run = False
+plot_run = True
 plot_average = True
 line_alpha = 0.2
 

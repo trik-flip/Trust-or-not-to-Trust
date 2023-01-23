@@ -70,6 +70,10 @@ for consumers, providers in simulation.runs(epochs, printing=True):
     if plot_run:
         plt.show()
 
+    for c in consumers:
+        plt.plot(c.MAE)
+    if plot_run:
+        plt.show()
 
 profiler.stop()
 profiler.show()
