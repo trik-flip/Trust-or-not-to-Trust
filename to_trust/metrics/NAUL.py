@@ -1,4 +1,5 @@
 from to_trust.agents.consumer import Consumer
+
 from .metrics import MetricSystem
 
 

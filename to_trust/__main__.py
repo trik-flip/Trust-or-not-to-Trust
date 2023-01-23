@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 
-from .util import profiler
 from .metrics import MetricSystem
-from .settings import simulation, epochs, runs, plot_average, line_alpha
-
+from .settings import epochs, line_alpha, plot_average, runs, simulation
+from .util import profiler
 
 sensor = MetricSystem()
 profiler.start()

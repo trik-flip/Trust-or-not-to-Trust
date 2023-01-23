@@ -1,6 +1,6 @@
 # Rita
+from to_trust.agents import Consumer, Provider, Witness
 from to_trust.testbed import Scenario
-from to_trust.agents import Witness, Consumer, Provider
 
 
 class StartLying(Scenario):

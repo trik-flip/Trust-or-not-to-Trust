@@ -1,11 +1,11 @@
-from random import seed
 import unittest
-import numpy as np
+from random import seed
 
 import matplotlib.pyplot as plt
+import numpy as np
 
+from to_trust.methods import ITEA, Act, Travos  # , MET
 from to_trust.scenarios import HostileEnvironment, StartLying
-from to_trust.methods import Act, Travos, ITEA  # , MET
 from to_trust.testbed import Simulation
 
 

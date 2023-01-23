@@ -1,6 +1,6 @@
 from typing import Callable
-from to_trust.agents import Agent
 
+from to_trust.agents import Agent
 from to_trust.agents.consumer import Consumer
 from to_trust.agents.provider import Provider
 from to_trust.util import Singleton

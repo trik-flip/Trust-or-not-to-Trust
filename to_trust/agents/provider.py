@@ -1,6 +1,7 @@
 from random import random
 
 from to_trust.util import profiler
+
 from .agent import Agent
 
 

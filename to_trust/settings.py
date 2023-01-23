@@ -12,8 +12,8 @@ plot_average = True
 line_alpha = 0.2
 
 scenario = Scenario_type(
-    bm_pct=.2,
-    bs_pct=.2,
+    bm_pct=0.2,
+    bs_pct=0.2,
     consumer_amount=10,
     provider_amount=25,
     witness_amount=100,

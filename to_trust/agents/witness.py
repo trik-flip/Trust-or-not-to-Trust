@@ -1,8 +1,9 @@
-from random import random, choice
+from random import choice, random
 
 from to_trust.util import profiler
-from .provider import Provider
+
 from .agent import Agent, LyingMode
+from .provider import Provider
 
 
 class Witness(Agent):

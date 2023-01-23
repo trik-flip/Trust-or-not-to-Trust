@@ -1,7 +1,7 @@
 # Philip
 from random import choice, sample
 
-from to_trust.agents import Witness, Consumer, Provider
+from to_trust.agents import Consumer, Provider, Witness
 from to_trust.testbed import Scenario
 
 
