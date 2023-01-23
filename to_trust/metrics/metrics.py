@@ -3,7 +3,7 @@ from to_trust.agents import Agent
 
 from to_trust.agents.consumer import Consumer
 from to_trust.agents.provider import Provider
-from ..util import Singleton
+from to_trust.util import Singleton
 
 MetricFunction = Callable[[dict[Consumer, float], dict[Provider, float], int], float]
 

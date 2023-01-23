@@ -1,7 +1,5 @@
-import logging
-
-from ..agents import Consumer, Provider, Witness
-from ..util import ToDoException, profiler
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.util import ToDoException, profiler
 from .scenario import Scenario
 
 

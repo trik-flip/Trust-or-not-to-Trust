@@ -1,6 +1,6 @@
 # Benedikt
-from ..agents import Witness
-from ..testbed import Scenario
+from to_trust.agents import Witness
+from to_trust.testbed import Scenario
 
 
 class HostileEnvironment(Scenario):

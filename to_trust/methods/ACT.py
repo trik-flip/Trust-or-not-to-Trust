@@ -1,8 +1,8 @@
 from math import e, exp, log
 from random import choice, random
 
-from ..agents import Consumer, Provider, Witness
-from ..util import profiler
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.util import profiler
 
 
 class Act(Consumer):
@@ -179,11 +179,8 @@ class Act(Consumer):
 
     @profiler.profile
     def _indirect_trust(self, p: Provider, t: int):
-        profiler.start("ACT-1")
         top = sum(self._pi(w, p) * w.score_of(p) for w in self.witnesses)
-        profiler.switch("ACT-1", "ACT-2")
         bottom = sum(self._pi(w, p) for w in self.witnesses)
-        profiler.stop("ACT-2")
         return top / bottom
 
     @profiler.profile

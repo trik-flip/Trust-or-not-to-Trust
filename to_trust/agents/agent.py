@@ -2,7 +2,7 @@ from abc import ABC
 from enum import Enum
 from typing import Any
 
-from ..util import ToDoException, profiler
+from to_trust.util import ToDoException, profiler
 
 
 class Agent(ABC):

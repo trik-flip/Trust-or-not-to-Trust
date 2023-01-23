@@ -1,7 +1,7 @@
 from random import random, choice
 
-from ..util import profiler
-from . import Provider
+from to_trust.util import profiler
+from .provider import Provider
 from .agent import Agent, LyingMode
 
 

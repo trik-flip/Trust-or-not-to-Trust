@@ -1,7 +1,7 @@
 from abc import ABC
 
-from ..agents import Consumer, Provider, Witness
-from ..util import profiler
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.util import profiler
 
 
 class Scenario(ABC):

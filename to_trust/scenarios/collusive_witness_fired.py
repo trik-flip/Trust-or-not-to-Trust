@@ -1,8 +1,7 @@
 # Philip
 from random import choice
 
-from ..agents import Witness
-from ..testbed import Scenario
+from to_trust.testbed import Scenario
 
 
 class FireWitness(Scenario):

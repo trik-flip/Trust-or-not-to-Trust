@@ -1,5 +1,6 @@
-from ..util import ToDoException, profiler
-from . import Provider, Witness
+from to_trust.util import ToDoException, profiler
+from .provider import Provider
+from .witness import Witness
 
 
 class Consumer(Witness):
@@ -10,6 +11,7 @@ class Consumer(Witness):
     @staticmethod
     def preprocess(witnesses, providers):
         pass
+
     def __init__(
         self,
     ) -> None:
