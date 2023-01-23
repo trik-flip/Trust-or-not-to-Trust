@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from .util import profiler
 from .metrics import MetricSystem
-from .settings import simulation, epochs, runs
+from .settings import simulation, epochs, runs, plot_average, line_alpha
 
 
 sensor = MetricSystem()
@@ -35,33 +35,34 @@ for consumers, providers in simulation.runs(epochs, printing=True):
         sum(x) / len(consumer_list.values()) for x in zip(*consumer_list.values())
     ]
 
-    plt.plot(average_consumer, "-", lw=4, label="Average Consumer")
-    plt.plot(average_producer, ":", lw=4, label="Average Provider")
+    if plot_average:
+        plt.plot(average_consumer, "-", lw=4, label="Average Consumer")
+        plt.plot(average_producer, ":", lw=4, label="Average Provider")
 
     for consumer in consumers:
         if best_consumer == consumer:
             plt.plot(consumer_list[consumer], "-b", label="Best Consumer")
         else:
             if not consumer_label_set:
-                plt.plot(consumer_list[consumer], "-g", label="Consumer")
+                plt.plot(consumer_list[consumer], "-g", label="Consumer", alpha=line_alpha)
                 consumer_label_set = True
             else:
-                plt.plot(consumer_list[consumer], "-g")
+                plt.plot(consumer_list[consumer], "-g", alpha=line_alpha)
 
     for provider in providers:
         if best_provider == provider:
             plt.plot(producer_list[provider], ":c", label="Best Provider")
         else:
             if not provider_label_set:
-                plt.plot(producer_list[provider], ":r", label="Provider")
+                plt.plot(producer_list[provider], ":r", label="Provider", alpha=line_alpha)
                 provider_label_set = True
             else:
-                plt.plot(producer_list[provider], ":r")
+                plt.plot(producer_list[provider], ":r", alpha=line_alpha)
 
     profiler.stop("single run")
     plt.title("Trust Simulation")
     plt.xlabel("Time step")
-    plt.ylabel("Utility")
+    plt.ylabel("Accumulated Utility")
     plt.legend()
     plt.show()
 
