@@ -1,6 +1,7 @@
 from random import random
 
-from ..util import profiler
+from to_trust.util import profiler
+
 from .agent import Agent
 
 
@@ -22,7 +23,7 @@ class Provider(Agent):
         l_cost: float = 0,
         u_cost: float = 1,
     ) -> None:
-
+        super().__init__()
         self.chance = chance if chance is not None else l_chance + (u_chance - l_chance) * random()
         self.quality = quality if quality is not None else l_quality + (u_quality - l_quality) * random()
         self.cost = cost if cost is not None else l_cost + (u_cost - l_cost) * random()

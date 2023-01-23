@@ -1,7 +1,6 @@
-import logging
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.util import ToDoException, profiler
 
-from ..agents import Consumer, Provider, Witness
-from ..util import ToDoException, profiler
 from .scenario import Scenario
 
 
@@ -85,3 +84,4 @@ class Simulation:
             c.register_witnesses(self.witnesses)
         for w in self.witnesses:
             w.register_providers(self.providers)
+        self.scenario.preprocess()
