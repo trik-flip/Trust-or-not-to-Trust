@@ -6,9 +6,8 @@ from random import choice
 
 import numpy as np
 
-from to_trust.agents import Consumer, Provider, Witness
 from to_trust.util import profiler
-
+from random import choice
 
 def current_prediction(recommendations, weights):
     recommendations = [r for r in recommendations]
