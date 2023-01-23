@@ -3,7 +3,7 @@ from .scenarios import FireWitness, HostileEnvironment, RecruitWitness, StartLyi
 from .testbed import Simulation
 
 Scenario_type = StartLying
-epochs = 20
+epochs = 1
 runs = 100
 ntcm_type = MET
 

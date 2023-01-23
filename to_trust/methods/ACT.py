@@ -74,7 +74,7 @@ class Act(Consumer):
         self._test = {}
         self._Th = Th
         self._pr_min = pr_min
-        self._pr = 1  
+        self._pr = 1
 
     @profiler.profile
     def update(self):

@@ -2,9 +2,9 @@ import unittest
 from random import seed
 
 
-from to_trust.scenarios import HostileEnvironment, StartLying
-from to_trust.methods import Act, Travos, MET, ITEA
-from to_trust.testbed import Simulation
+from to_trust.methods import ITEA, Act, Travos  # , MET
+from to_trust.scenarios import HostileEnvironment, StartLying, RecruitWitness
+from to_trust.testbed import Simulation, Scenario
 
 
 class TestingTravos(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestingTravos(unittest.TestCase):
             },
             simple_lying=True,
         )
-        sim = Simulation(scenario, Act, 1)
+        sim = Simulation(scenario, Travos, 50)
         _con_scores, _pro_scores = sim.run()
         result_con = [sum(_con_scores[c]) for c in _con_scores]
         expected_con = [15.285075700775115]
@@ -68,9 +68,41 @@ class TestingACT(unittest.TestCase):
                 "l_cost": 0.3,
                 "u_cost": 0.6,
             },
-        )
-        sim = Simulation(scenario, Act, 1)
-        _con_scores, _pro_scores = sim.run()
+        }
+
+        def sim_create(scenario: Scenario):
+            return Simulation(scenario(**scenario_settings), Act, 200)  # type: ignore
+
+        self.sim = sim_create
+        return super().setUp()
+
+    def test_Lying_Env(self):
+        _con_scores, _pro_scores = self.sim(StartLying).run()  # type: ignore
+
+        result_con = [sum(_con_scores[c]) for c in _con_scores]
+        expected_con = [
+            67.00252496554533,
+            63.9234021760778,
+            66.97055283491797,
+            63.41475978623277,
+            63.2963817690425,
+        ]
+
+        result_pro = [sum(_pro_scores[p]) for p in _pro_scores]
+        expected_pro = [
+            66.5475343240777,
+            48.87319421642739,
+            31.07193050838494,
+            64.9156465431839,
+            69.98543706033685,
+        ]
+        self.assertEqual(result_con, expected_con)
+        self.assertEqual(result_pro, expected_pro)
+
+    def test_Hostile_Env(self):
+        _con_scores, _pro_scores = self.sim(HostileEnvironment).run()  # type: ignore
+
+        result_con = [sum(_con_scores[c]) for c in _con_scores]
         expected_con = [
             67.00252496554533,
             63.9234021760778,
@@ -87,18 +119,8 @@ class TestingACT(unittest.TestCase):
             69.98543706033685,
         ]
 
-    def test_Hostile_with_Travos(self):
-        scenario = HostileEnvironment(
-            witness_amount=20,
-            consumer_amount=1,
-            provider_amount=101,
-            provider_options={
-                "chance": 1,
-                "cost": 0,
-            },
-            simple_lying=True
-        )
-        sim = Simulation(scenario, Travos, 1)
+        self.assertEqual(result_con, expected_con)
+        self.assertEqual(result_pro, expected_pro)
 
     def test_RecruitWitness(self):
         _con_scores, _pro_scores = self.sim(RecruitWitness).run()  # type: ignore
@@ -119,26 +141,14 @@ class TestingACT(unittest.TestCase):
             55.8352872373441,
         ]
 
-    def test_Hostile_with_MET(self):
-        scenario = HostileEnvironment(
-            witness_amount=50,
-            consumer_amount=1,
-            provider_amount=101,
-            provider_options={
-                "chance": 1,
-                "cost": 0,
-            },
-            simple_lying=True
-        )
-        sim = Simulation(scenario, MET, 100)
-        
-        try:
-            _con_scores, _pro_scores = sim.run(True)
-        except KeyboardInterrupt:
-            plt.plot(sim.consumers[0]._avg_absolute_errors)
-            plt.ylabel("mean absolute error")
-            plt.xlabel("num. interactions")
-            plt.savefig("hostile_met.png")
+        self.assertEqual(result_con, expected_con)
+        self.assertEqual(result_pro, expected_pro)
+
+
+class TestBase(unittest.TestCase):
+    def setUp(self) -> None:
+        seed(42)
+        return super().setUp()
 
     def test_startLyingITEA(self):
         scenario = StartLying(
@@ -158,6 +168,7 @@ class TestingACT(unittest.TestCase):
         # ntcm.preprocessing(self)
         _con_scores, _pro_score = sim.run()
         l = []
+        assert False
 
     def test_ITEA_RFU(self):
         """
@@ -167,6 +178,7 @@ class TestingACT(unittest.TestCase):
         Percentages of unreliable advisers (40%, 70%, 90%)
         """
         test = []
+        assert False
 
     def test_ITEA_MAE(self):
         """
@@ -212,8 +224,8 @@ class TestingACT(unittest.TestCase):
         )
         sim = Simulation(scenario, ntcm, 10)
         _con_scores, _pro_score = sim.run()
+        assert False
+
 
 if __name__ == "__main__":
     unittest.main()
-
-
