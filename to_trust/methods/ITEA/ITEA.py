@@ -10,7 +10,6 @@ from to_trust.agents import Consumer, Provider, Witness
 from to_trust.util import profiler
 
 
-
 def current_prediction(recommendations, weights):
     recommendations = [r for r in recommendations]
     weights = [weight for weight in weights]
@@ -91,6 +90,7 @@ class ITEA(Consumer):
             self.weights[provider] = {w: 1 / self.K for w in self.witnesses}
 
     def update_provider(self, p: Provider, score: float) -> None:
+        print(score)
         self.interactions[p] = score
         if score > self.threshold:
             self.good_interactions[p] += 1
@@ -102,6 +102,7 @@ class ITEA(Consumer):
         self.interactions = {p: 0 for p in providers}
         self.good_interactions = {p: 0 for p in providers}
         self.bad_interactions = {p: 0 for p in providers}
+        # self.absolute_difference = []
         self.absolute_difference = {p: 0 for p in providers}
 
     @profiler.profile
@@ -177,3 +178,15 @@ class ITEA(Consumer):
             self.weights[highest_provider][witness] = self.weights[highest_provider][
                 witness
             ] * math.exp(exp)
+
+        # MAE
+        sum_error = 0
+        for provider in self.providers.keys():
+            prediction = predictions_for_providers[provider]
+            absolute_error = abs(self.interactions[provider] - prediction)
+            sum_error += absolute_error
+        mae = sum_error/len(self.providers)
+        self.MAE.append(mae)
+
+    def get_final_MAE(self):
+        return self.MAE[-1]
