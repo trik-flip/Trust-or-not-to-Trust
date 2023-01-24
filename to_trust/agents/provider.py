@@ -33,3 +33,7 @@ class Provider(Agent):
         if self.chance > random():
             return self.quality - self.cost
         return -self.cost
+
+    @profiler.profile
+    def get_average_value(self) -> float:
+        return self.chance * (self.quality - self.cost) + (1 - self.chance) * -self.cost

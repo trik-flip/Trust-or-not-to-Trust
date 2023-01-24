@@ -30,8 +30,6 @@ class Travos(Consumer):
 
         self._intervals = np.linspace(0, 1, num_intervals + 1)
 
-        self.avg_estimation_errors = []
-
     def register_witnesses(self, witnesses: list[Witness]):
         super(Travos, self).register_witnesses(witnesses)
         for witness in witnesses:
@@ -51,9 +49,8 @@ class Travos(Consumer):
         # update avg estimation error
         avg_estimation_error = 0
         for provider in self.providers.keys():
-            avg_estimation_error += abs(self.providers[provider] - provider.quality)
-        self.avg_estimation_errors.append(avg_estimation_error / len(self.providers))
-        print(self.avg_estimation_errors[-1])
+            avg_estimation_error += abs(self.providers[provider] - provider.get_average_value())
+        self.MAE.append(avg_estimation_error / len(self.providers))
 
     def update_provider(self, provider: Provider, score: float) -> None:
         outcome = score > self._outcome_threshold
