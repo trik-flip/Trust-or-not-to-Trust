@@ -9,6 +9,9 @@ if __name__ == '__main__':
     sensor = MetricSystem()
     profiler.start()
 
+    # TODO: rename for every experiment
+    experiment_name = "TestExperiment"
+
     consumer_utility_data = pd.DataFrame([], columns=["overall_run_index",
                                                       "simulation_run_index",
                                                       "consumer_index",
@@ -114,9 +117,9 @@ if __name__ == '__main__':
         consumer_mae_data_one_run['overall_run_index'] = overall_run_index
         consumer_mae_data = pd.concat([consumer_mae_data, consumer_mae_data_one_run], ignore_index=True)
 
-    consumer_utility_data.to_csv("consumer_utility_data.csv")
-    provider_utility_data.to_csv("provider_utility_data.csv")
-    consumer_mae_data.to_csv("consumer_mae_data.csv")
+    consumer_utility_data.to_csv(experiment_name + "consumer_utility_data.csv")
+    provider_utility_data.to_csv(experiment_name + "provider_utility_data.csv")
+    consumer_mae_data.to_csv(experiment_name + "consumer_mae_data.csv")
 
     profiler.stop()
     profiler.show()
