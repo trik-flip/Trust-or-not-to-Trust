@@ -22,17 +22,19 @@ class RecruitWitness(Scenario):
         provider_options: dict[str, object] | None = None,
         consumer_as_witness=False,
         ring_size: int = 0,
-        witness_precentage_of_ring: float = 0.8
+        witness_percentage_of_ring: float = 0.8
     ):
         ring = []
-        collusive_members = sample(witnesses, ring_size * witness_precentage_of_ring)
+        to_sample = ring_size * witness_percentage_of_ring
+        collusive_members = sample(witnesses, int(to_sample))
+
         collusive_members.extend(
-            sample(consumers, ring_size * (1 - witness_precentage_of_ring))
+            sample(providers, ring_size * int((1 - witness_percentage_of_ring)))
         )
         for member in collusive_members:
             member.add_to_ring(ring)
 
-        super.__init__(
+        super().__init__(
             witnesses=witnesses,
             witness_options=witness_options,
             witness_amount=witness_amount,
