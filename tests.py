@@ -1,7 +1,7 @@
 import unittest
 from random import seed
 
-
+from to_trust import LyingMode
 from to_trust.methods import ITEA, Act, Travos  # , MET
 from to_trust.scenarios import HostileEnvironment, StartLying, RecruitWitness, Simple
 from to_trust.testbed import Simulation, Scenario
@@ -22,7 +22,7 @@ class TestingTravos(unittest.TestCase):
                 "chance": 1,
                 "cost": 0,
             },
-            simple_lying=True,
+            lying_mode=LyingMode.Inverse
         )
         sim = Simulation(scenario, Travos, 50)
         _con_scores, _pro_scores = sim.run()
@@ -211,32 +211,6 @@ class TestBase(unittest.TestCase):
         ]
         self.assertEqual(list(_con_scores), expected_con)
         self.assertEqual(list(_pro_scores), expected_pro)
-
-    def test_Hostile_with_Travos(self):
-        scenario = HostileEnvironment(
-            witness_amount=20,
-            consumer_amount=1,
-            provider_amount=101,
-            provider_options={
-                "chance": 1,
-                "cost": 0,
-            },
-            simple_lying=True
-        )
-        sim = Simulation(scenario, Travos, 200)
-
-        try:
-            _con_scores, _pro_scores = sim.run(True)
-        except KeyboardInterrupt:
-            plt.plot(sim.consumers[0].avg_estimation_errors)
-            plt.ylabel("mean estimation error")
-            plt.xlabel("num. interactions")
-            plt.savefig("hostile_travos.png")
-            plt.plot(sim.consumers[0].avg_estimation_errors)
-            plt.show()
-
-    # if __name__ == "__main__":
-    #     unittest.main()
 
     def test_startLyingITEA(self):
         scenario = StartLying(
