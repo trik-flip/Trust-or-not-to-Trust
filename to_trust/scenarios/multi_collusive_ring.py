@@ -4,8 +4,8 @@ from random import choice, sample, random
 from to_trust.agents import Consumer, Provider, Witness
 from to_trust.testbed import Scenario
 
-class CollusiveRing(Scenario):
-    #There is a group working together (a collusive ring), they ballot-stuff each other.
+class MultiCollusiveRing(Scenario):
+    #There are multiple groups working together (collusive rings), they ballot-stuff each other.
      def __init__(
         self,
         *,
@@ -20,17 +20,22 @@ class CollusiveRing(Scenario):
         provider_options: dict[str, object] | None = {},
         consumer_as_witness=False,
         ring_size: int = 5,
+        nr_rings: int = 5,
         ):
         self.ring_size = ring_size
-        self.ring = []
-        self.independent = []
+        self.nr_rings = nr_rings
+        self.rings = {}
 
-        for _ in range(self.ring_size):
-            self.ring.append(Witness(honesty=1, ballot_stuffing=True))
-        
-        remaining_witnesses = witness_amount - ring_size
-        for _ in range(remaining_witnesses):
-            self.independent.append(Witness(honesty=0, bad_mouthing=True))
+        temp_witness_list = self.witnesses.copy()
+        for ring in range(nr_rings):
+            self.rings[ring] = []
+            collusive_members = sample(
+                temp_witness_list, self.ring_size
+            )
+            for member in collusive_members:
+                member.add_to_ring(self.rings[ring])
+                temp_witness_list.remove(member)
+
 
         super().__init__(
             witnesses=witnesses,
