@@ -1,8 +1,8 @@
 # Philip
-from random import choice, sample
+from random import choice, sample, random
 
-from ..agents import Witness, Consumer, Provider
-from ..testbed import Scenario
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.testbed import Scenario
 
 
 class RecruitWitness(Scenario):
@@ -13,14 +13,15 @@ class RecruitWitness(Scenario):
         *,
         witnesses: list[Witness] | None = None,
         witness_amount: int = 0,
-        witness_options: dict[str, object] | None = None,
+        witness_options: dict[str, object] | None = {},
         consumers: list[Consumer] | None = None,
         consumer_amount: int = 0,
-        consumer_options: dict[str, object] | None = None,
+        consumer_options: dict[str, object] | None = {},
         providers: list[Provider] | None = None,
         provider_amount: int = 0,
-        provider_options: dict[str, object] | None = None,
+        provider_options: dict[str, object] | None = {},
         consumer_as_witness=False,
+<<<<<<< HEAD
         ring_size: int = 0,
         witness_percentage_of_ring: float = 0.8
     ):
@@ -34,6 +35,15 @@ class RecruitWitness(Scenario):
         for member in collusive_members:
             member.add_to_ring(ring)
 
+=======
+        ring_size: int = 5,
+        witness_percentage_of_ring: float = 0.0,
+        add_member_chance: float = 0.5,
+    ):
+        self.ring_size = ring_size
+        self.witness_percentage_of_ring = witness_percentage_of_ring
+        self.add_member_chance = add_member_chance
+>>>>>>> refs/remotes/origin/main
         super().__init__(
             witnesses=witnesses,
             witness_options=witness_options,
@@ -47,18 +57,33 @@ class RecruitWitness(Scenario):
             consumer_as_witness=consumer_as_witness,
         )
 
-    def update(self, providers, consumers, witnesses):
-        collusive_ring = None
+    def preprocess(self):
+        self.ring = []
+        collusive_members = sample(
+            self.witnesses, int(self.ring_size * self.witness_percentage_of_ring)
+        )
+        collusive_members.extend(
+            sample(
+                self.providers,
+                int(self.ring_size * (1 - self.witness_percentage_of_ring)),
+            )
+        )
+        for member in collusive_members:
+            member.add_to_ring(self.ring)
+
+    def update(self, providers, _c, witnesses):
         not_collusive_members = set()
-
-        for w in witnesses:
-            if len(w.ring) == 0:
-                not_collusive_members.add(w)
-            else:
-                collusive_ring = w.ring
-
-        choosen_one = self.__select_new_member(not_collusive_members)
-        choosen_one.add_to_ring(collusive_ring)
+        if self.witness_percentage_of_ring > random():
+            for a in witnesses:
+                if len(a.ring) == 0:
+                    not_collusive_members.add(a)
+        else:
+            for a in providers:
+                if len(a.ring) == 0:
+                    not_collusive_members.add(a)
+        if len(not_collusive_members) > 0 and self.add_member_chance > random():
+            chosen_one = self.__select_new_member(not_collusive_members)
+            chosen_one.add_to_ring(self.ring)
 
     @staticmethod
     def __select_new_member(collusive_ring):

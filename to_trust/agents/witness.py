@@ -1,8 +1,9 @@
-from random import random, choice
+from random import choice, random
 
-from ..util import profiler
-from . import Provider
+from to_trust.util import profiler
+
 from .agent import Agent, LyingMode
+from .provider import Provider
 
 
 class Witness(Agent):
@@ -30,7 +31,6 @@ class Witness(Agent):
         self.epoch = 0
         self.scores = {}
         self.bonus = bonus
-        self.ring = []
         self.honesty = honesty
         self.ballot_stuffing = ballot_stuffing
         self.lying_mode = lying_mode
@@ -45,22 +45,29 @@ class Witness(Agent):
             self.scores[provider] = 0
         ret_val: float = self.scores[provider]
 
-        match (provider in self.ring, self.lying_mode):
-            case (True, LyingMode.Fixed):
-                return self.bonus
-            case (True, LyingMode.Bonus):
-                ret_val += self.bonus if self.ballot_stuffing else 0
-            case (False, LyingMode.Fixed):
-                return 1 - self.bonus
-            case (False, LyingMode.Bonus):
-                ret_val -= self.bonus if self.bad_mouthing else 0
+        if not self.honest():
+            match(provider in self.ring, self.lying_mode):
+                case(True, LyingMode.Fixed):
+                    ret_val = self.bonus
+                case(True, LyingMode.Bonus):
+                    ret_val += self.bonus if self.ballot_stuffing else 0
+                case(True, LyingMode.Inverse):
+                    pass
+                case(False, LyingMode.Fixed):
+                    ret_val = 1 - self.bonus
+                case(False, LyingMode.Bonus):
+                    if self.bad_mouthing:
+                        ret_val -= self.bonus
+                    elif self.ballot_stuffing and len(self.ring) == 0:
+                        ret_val += self.bonus
+                case(False, LyingMode.Inverse):
+                    ret_val = 1 - ret_val
 
-        ret_val = min(1, max(0, ret_val))
+        return min(1., max(.0, ret_val))
 
-        return ret_val if self.honest() else 1 - ret_val
 
     def honest(self):
-        return self.honesty > random()
+        return self.honesty >= random()
 
     @profiler.profile
     def becomes_dishonest(self):

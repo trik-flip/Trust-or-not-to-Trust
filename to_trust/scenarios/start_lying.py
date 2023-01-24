@@ -1,6 +1,6 @@
 # Rita
-from ..testbed import Scenario
-from ..agents import Witness, Consumer, Provider
+from to_trust.agents import Consumer, Provider, Witness, LyingMode
+from to_trust.testbed import Scenario
 
 
 class StartLying(Scenario):
@@ -19,6 +19,8 @@ class StartLying(Scenario):
         provider_amount: int = 0,
         provider_options: dict[str, object] | None = None,
         consumer_as_witness=False,
+        lying_mode: LyingMode = LyingMode.Bonus,
+        bonus: float = .2,
     ):
         self.witness_percentage_lying = witness_percentage_lying
         witnesses: list[Witness] = []
@@ -27,7 +29,8 @@ class StartLying(Scenario):
         for _ in range(witnesses_to_lie):
             witnesses.append(
                 Witness(
-                    honesty=1, starts_lying=True, epochs_before_dishonest=honest_epochs
+                    honesty=1, starts_lying=True, epochs_before_dishonest=honest_epochs, lying_mode=lying_mode,
+                    bonus=bonus
                 )
             )
         for _ in range(witness_amount - witnesses_to_lie):

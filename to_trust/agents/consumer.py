@@ -1,5 +1,7 @@
-from ..util import ToDoException, profiler
-from . import Provider, Witness
+from to_trust.util import ToDoException, profiler
+
+from .provider import Provider
+from .witness import Witness
 
 
 class Consumer(Witness):
@@ -9,7 +11,9 @@ class Consumer(Witness):
 
     @staticmethod
     def preprocess(witnesses, providers):
+        """This function can be implemented if something like a Ring needs to be prepared"""
         pass
+
     def __init__(
         self,
     ) -> None:
@@ -17,6 +21,7 @@ class Consumer(Witness):
         self.witnesses = {}
         self.providers = {}
         self.scores = {}
+        self.MAE = []
 
     @profiler.profile
     def register_witnesses(self, witnesses: list[Witness]):

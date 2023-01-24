@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import math
 import random
+from random import choice
 
 import numpy as np
-import math
-from to_trust import Provider, Consumer, Witness
 
-from util import profiler
-from random import choice
+from to_trust.agents import Consumer, Provider, Witness
+from to_trust.util import profiler
+
 
 
 def current_prediction(recommendations, weights):
@@ -21,21 +22,21 @@ def current_prediction(recommendations, weights):
 
 def loss_function(real, predicted):
     """
-        Squared error loss for 2 values
+    Squared error loss for 2 values
     """
     return (real - predicted) ** 2
 
 
 def mean_absolute_error(real, predicted):
     """
-        For experiments
+    For experiments
     """
     return np.mean(np.abs(real - predicted))
 
 
 def beta_reputation_system():
     """
-        for a provider: b(p, n) = (p+1)/(p+n+2)
+    for a provider: b(p, n) = (p+1)/(p+n+2)
     """
 
 
@@ -46,7 +47,7 @@ class ITEA(Consumer):
     #  over 100 such sampled trustee combinations.
 
     @staticmethod
-    def preprocess(witnesses, providers, epochs=30000, threshold=.5):
+    def preprocess(witnesses, providers, epochs=30000, threshold=0.5):
         for w in witnesses:
             w.good_interactions = {p: 0 for p in providers}
             w.bad_interactions = {p: 0 for p in providers}
@@ -60,12 +61,13 @@ class ITEA(Consumer):
                 w.bad_interactions[p] += 1
         for w in witnesses:
             for p in providers:
-                w.scores[p] = (w.good_interactions[p] + 1) / (w.good_interactions[p] + w.bad_interactions[p] + 2)
+                w.scores[p] = (w.good_interactions[p] + 1) / (
+                    w.good_interactions[p] + w.bad_interactions[p] + 2
+                )
 
     def __init__(
-            self,
-            T: float = 100,
-            threshold=0
+        self,
+        T: float = 100,
     ) -> None:
         super().__init__()
         self.bad_interactions = None
@@ -76,7 +78,6 @@ class ITEA(Consumer):
         self.T = T
         self.weights = []
         self.loss = []
-        self.threshold = threshold
 
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)
@@ -103,9 +104,36 @@ class ITEA(Consumer):
 
     @profiler.profile
     def choose_provider(self):
+
+        predictions_for_providers = dict()
+        witnesses_recommendations = dict()
+
+        for p in self.providers.keys():
+            witness_recommendations = dict()
+            for witness in self.witnesses:
+                witness_recommendations[witness] = witness.score_of(p)
+            own_prediction = current_prediction(
+                witness_recommendations.values(), self.weights[p].values()
+            )
+            witnesses_recommendations[p] = witness_recommendations
+            predictions_for_providers[p] = own_prediction
+
+        # Get the value of the highest prediction
+        max_prediction = max(predictions_for_providers.values())
+
+        # If more than 1 candidate -> choose 1 at random
+        max_providers = [
+            k for k, v in predictions_for_providers.items() if v == max_prediction
+        ]
+        highest_provider = random.choice(max_providers)
+
+        return highest_provider
+
+    def update(self):
         """
-            Make the choice
-            Update the weights
+        Update the weights etc
+        Make the choice
+        Must be called after each timestep
         """
         predictions_for_providers = dict()
         witnesses_recommendations = dict()
@@ -114,7 +142,9 @@ class ITEA(Consumer):
             witness_recommendations = dict()
             for witness in self.witnesses:
                 witness_recommendations[witness] = witness.score_of(p)
-            own_prediction = current_prediction(witness_recommendations.values(), self.weights[p].values())
+            own_prediction = current_prediction(
+                witness_recommendations.values(), self.weights[p].values()
+            )
             witnesses_recommendations[p] = witness_recommendations
             predictions_for_providers[p] = own_prediction
 
@@ -122,7 +152,9 @@ class ITEA(Consumer):
         max_prediction = max(predictions_for_providers.values())
 
         # If more than 1 candidate -> choose 1 at random
-        max_providers = [k for k, v in predictions_for_providers.items() if v == max_prediction]
+        max_providers = [
+            k for k, v in predictions_for_providers.items() if v == max_prediction
+        ]
         highest_provider = random.choice(max_providers)
 
         # Observe the outcome
@@ -133,13 +165,13 @@ class ITEA(Consumer):
         self.absolute_difference[p] = self.absolute_difference[p] + abs(max_prediction-highest_provider_actual)
 
         for witness in self.witnesses:
-            witness_loss = loss_function(highest_provider_actual, witnesses_recommendations[highest_provider][witness])
+            witness_loss = loss_function(
+                highest_provider_actual,
+                witnesses_recommendations[highest_provider][witness],
+            )
             # Update weights for the witness
             exp = -self.learning_rate * witness_loss
-            self.weights[highest_provider][witness] = self.weights[highest_provider][witness] * math.exp(exp)
 
-        return highest_provider
-
-    def update(self):
-        super().update()
-
+            self.weights[highest_provider][witness] = self.weights[highest_provider][
+                witness
+            ] * math.exp(exp)

@@ -1,6 +1,6 @@
 # Benedikt
-from ..agents import Witness
-from ..testbed import Scenario
+from to_trust.agents import Witness, LyingMode
+from to_trust.testbed import Scenario
 
 
 class HostileEnvironment(Scenario):
@@ -16,24 +16,26 @@ class HostileEnvironment(Scenario):
         provider_options: dict[str, object] | None = None,
         consumer_as_witness=False,
         simple_lying=False,
+        lying_mode: LyingMode = LyingMode.Bonus,
+        bonus: float = .2,
     ):
         witnesses: list[Witness] = []
 
         if simple_lying:
             for _ in range(witness_amount):
-                witnesses.append(Witness(honesty=0))
+                witnesses.append(Witness(honesty=0, lying_mode=LyingMode.Inverse))
         else:
             for _ in range(round(bm_pct * witness_amount)):
-                witnesses.append(Witness(bad_mouthing=True))
+                witnesses.append(Witness(honesty=0, bad_mouthing=True, lying_mode=lying_mode, bonus=bonus))
 
             for _ in range(round(bs_pct * witness_amount)):
-                witnesses.append(Witness(ballot_stuffing=True))
+                witnesses.append(Witness(honesty=0, ballot_stuffing=True, lying_mode=lying_mode, bonus=bonus))
 
             if len(witnesses) < witness_amount:
                 if bm_pct > bs_pct:
-                    witnesses.append(Witness(bad_mouthing=True))
+                    witnesses.append(Witness(honesty=0, bad_mouthing=True, lying_mode=lying_mode, bonus=bonus))
                 else:
-                    witnesses.append(Witness(ballot_stuffing=True))
+                    witnesses.append(Witness(honesty=0, ballot_stuffing=True, lying_mode=lying_mode, bonus=bonus))
 
         super().__init__(
             witnesses=witnesses,
