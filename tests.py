@@ -4,7 +4,8 @@ from random import seed
 
 from to_trust.methods import ITEA, Act, Travos  # , MET
 from to_trust.scenarios import HostileEnvironment, StartLying, RecruitWitness, Simple
-from to_trust.testbed import Simulation, Scenario, Witness, RandomWitness
+from to_trust.testbed import Simulation, Scenario
+from to_trust.agents import RandomWitness
 
 
 class TestingTravos(unittest.TestCase):
@@ -313,7 +314,7 @@ class TestBase(unittest.TestCase):
         """
         ntcm = ITEA
         witness_amount = 100
-        witnesses: list[Witness] = []
+        witnesses = []
         percentage_unreliable_witnesses = [0.4, 0.7, 0.9]
         for unreliable_witnesses in percentage_unreliable_witnesses:
             witnesses_to_lie = round(witness_amount * unreliable_witnesses)
