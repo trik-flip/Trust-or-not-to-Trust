@@ -10,6 +10,7 @@ from to_trust.agents import Consumer, Provider, Witness
 from to_trust.util import profiler
 
 
+
 def current_prediction(recommendations, weights):
     recommendations = [r for r in recommendations]
     weights = [weight for weight in weights]
@@ -40,6 +41,11 @@ def beta_reputation_system():
 
 
 class ITEA(Consumer):
+
+    # TODO: The trustworthiness value of each individual provider is sampled uniformly at
+    #  random from the values 0.1, 0.2, . . . , 0.9; each reported result is the average
+    #  over 100 such sampled trustee combinations.
+
     @staticmethod
     def preprocess(witnesses, providers, epochs=30000, threshold=0.5):
         for w in witnesses:
@@ -47,15 +53,14 @@ class ITEA(Consumer):
             w.bad_interactions = {p: 0 for p in providers}
 
         for i in range(epochs):
-            w = choice(witnesses)
-            p = choice(providers)
+            w = choice(list(witnesses))
+            p = choice(list(providers))
             if p.get_service() >= threshold:
                 w.good_interactions[p] += 1
             else:
                 w.bad_interactions[p] += 1
         for w in witnesses:
             for p in providers:
-
                 w.scores[p] = (w.good_interactions[p] + 1) / (
                     w.good_interactions[p] + w.bad_interactions[p] + 2
                 )
@@ -63,14 +68,18 @@ class ITEA(Consumer):
     def __init__(
         self,
         T: float = 100,
+        threshold: float = 0.5,
     ) -> None:
         super().__init__()
+        self.bad_interactions = None
+        self.good_interactions = None
         self.learning_rate = None
         self.interactions = None
         self.K = None
         self.T = T
         self.weights = []
         self.loss = []
+        self.threshold = threshold
 
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)
@@ -83,13 +92,21 @@ class ITEA(Consumer):
 
     def update_provider(self, p: Provider, score: float) -> None:
         self.interactions[p] = score
+        if score > self.threshold:
+            self.good_interactions[p] += 1
+        else:
+            self.bad_interactions[p] += 1
 
     def register_providers(self, providers: list[Provider]):
         super().register_providers(providers)
         self.interactions = {p: 0 for p in providers}
+        self.good_interactions = {p: 0 for p in providers}
+        self.bad_interactions = {p: 0 for p in providers}
+        self.absolute_difference = {p: 0 for p in providers}
 
     @profiler.profile
     def choose_provider(self):
+
         predictions_for_providers = dict()
         witnesses_recommendations = dict()
 
@@ -120,7 +137,6 @@ class ITEA(Consumer):
         Make the choice
         Must be called after each timestep
         """
-        super().update()
         predictions_for_providers = dict()
         witnesses_recommendations = dict()
 
@@ -147,6 +163,9 @@ class ITEA(Consumer):
         highest_provider_actual = self.interactions[highest_provider]
         self.loss.append(loss_function(highest_provider_actual, max_prediction))
 
+        # Store the absolute difference between the actual and the estimated values
+        self.absolute_difference[p] = self.absolute_difference[p] + abs(max_prediction-highest_provider_actual)
+
         for witness in self.witnesses:
             witness_loss = loss_function(
                 highest_provider_actual,
@@ -154,6 +173,7 @@ class ITEA(Consumer):
             )
             # Update weights for the witness
             exp = -self.learning_rate * witness_loss
+
             self.weights[highest_provider][witness] = self.weights[highest_provider][
                 witness
             ] * math.exp(exp)

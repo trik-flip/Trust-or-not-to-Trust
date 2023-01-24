@@ -23,8 +23,8 @@ class RecruitWitness(Scenario):
         consumer_as_witness=False,
         ring_size: int = 5,
         witness_percentage_of_ring: float = 0.0,
-        add_member_chance: float = 0.5,
-    ):
+        add_member_chance: float = 0.5
+):
         self.ring_size = ring_size
         self.witness_percentage_of_ring = witness_percentage_of_ring
         self.add_member_chance = add_member_chance
