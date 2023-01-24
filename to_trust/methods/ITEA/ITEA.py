@@ -68,6 +68,7 @@ class ITEA(Consumer):
     def __init__(
         self,
         T: float = 100,
+        threshold: float = 0.5,
     ) -> None:
         super().__init__()
         self.bad_interactions = None
@@ -78,6 +79,7 @@ class ITEA(Consumer):
         self.T = T
         self.weights = []
         self.loss = []
+        self.threshold = threshold
 
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)

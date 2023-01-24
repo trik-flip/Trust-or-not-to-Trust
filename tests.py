@@ -5,7 +5,7 @@ from random import seed
 from to_trust.methods import ITEA, Act, Travos  # , MET
 from to_trust.scenarios import HostileEnvironment, StartLying, RecruitWitness, Simple
 from to_trust.testbed import Simulation, Scenario
-from to_trust.agents import RandomWitness
+from to_trust.agents import Consumer, Provider, Witness, RandomWitness
 
 
 class TestingTravos(unittest.TestCase):
