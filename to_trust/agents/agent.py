@@ -28,3 +28,4 @@ class Agent(ABC):
 class LyingMode(Enum):
     Fixed = 1
     Bonus = 2
+    Inverse = 3
