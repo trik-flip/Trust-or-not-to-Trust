@@ -15,13 +15,12 @@ class HostileEnvironment(Scenario):
         provider_amount: int = 0,
         provider_options: dict[str, object] | None = None,
         consumer_as_witness=False,
-        simple_lying=False,
         lying_mode: LyingMode = LyingMode.Bonus,
         bonus: float = .2,
     ):
         witnesses: list[Witness] = []
 
-        if simple_lying:
+        if lying_mode == LyingMode.Inverse:
             for _ in range(witness_amount):
                 witnesses.append(Witness(honesty=0, lying_mode=LyingMode.Inverse))
         else:
