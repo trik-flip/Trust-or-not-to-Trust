@@ -63,8 +63,17 @@ collusive_provider_fired = FireWitness(**general_parameters, **fire_provider_par
 # Multiple collusive rings
 # TODO: Chloe
 
-# Witnesses become more honest over time
-# TODO: Rita
+# Witnesses become more dishonest over time
+become_dishonest_parameters = {
+    # Percentage of witnesses that will start from being honest to being completely dishonest
+    "witness_percentage_lying": 0.5,
+    # Number of epochs before the witnesses become dishonest
+    "honest_epochs": 50,
+    #
+    "lying_mode": LyingMode.Bonus,
+    "bonus": .2
+}
+become_dishonest = StartLying(**general_parameters, ** become_dishonest_parameters)
 
 # Mixed world where 20% to 80% of the witnesses are lying either by ballot-stuffing or badmouthing
 bs_bm_hostile_20_parameters = {
