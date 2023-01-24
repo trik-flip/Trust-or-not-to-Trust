@@ -61,10 +61,10 @@ fire_provider_parameters = {
 collusive_provider_fired = FireWitness(**general_parameters, **fire_provider_parameters)
 
 # Multiple collusive rings
-# TODO: Benedikt
+# TODO: Chloe
 
 # Witnesses become more honest over time
-# TODO: Benedikt
+# TODO: Rita
 
 # Mixed world where 20% to 80% of the witnesses are lying either by ballot-stuffing or badmouthing
 bs_bm_hostile_20_parameters = {
