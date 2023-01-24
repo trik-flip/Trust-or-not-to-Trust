@@ -5,12 +5,12 @@ from metrics import MetricSystem
 from settings import epochs, line_alpha, plot_average, runs, simulation, plot_run
 from util import profiler
 
+# TODO (Philip): run + rename for every scenario in settings
 if __name__ == '__main__':
     sensor = MetricSystem()
     profiler.start()
 
-    # TODO: rename for every experiment
-    experiment_name = "TestExperiment"
+    experiment_name = "TRAVOS_HOSTILE"
 
     consumer_utility_data = pd.DataFrame([], columns=["overall_run_index",
                                                       "simulation_run_index",
