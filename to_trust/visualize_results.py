@@ -15,7 +15,8 @@ scenario_name_mapping = {
     "bs_bm_hostile_40": "Hostile environment\n40% Lying",
     "bs_bm_hostile_80": "Hostile environment\n80% Lying",
     "stop_lying": "Witnesses stop lying after 10 epochs",
-    "start_lying": "Witnesses start lying after 10 epochs"
+    "start_lying": "Witnesses start lying after 10 epochs",
+    "multiple_collusive_rings": "Multiple collusive rings"
 }
 
 if __name__ == '__main__':
@@ -74,6 +75,6 @@ if __name__ == '__main__':
         plt.title(scenario_name_mapping[scenario_name])
         sns.lineplot(data=consumer_mae_data[scenario_name], x='num. interactions', y='mae',
                              hue='Method', hue_order=hue_order)
-        plt.ylabel("mean estimation error")
+        plt.ylabel("mean absolute error")
         plt.savefig("mae_" + scenario_name + ".png")
         plt.clf()

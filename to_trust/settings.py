@@ -13,7 +13,7 @@ from to_trust.scenarios.stop_lying import StopLying
 
 epochs = 1
 runs = 50
-ntcm_type = Act
+ntcm_type = ITEA
 
 # Plotting settings
 plot_run = True
@@ -167,13 +167,14 @@ bs_bm_hostile_80 = HostileEnvironment(
 )
 
 scenarios = {
-    "stop_lying": become_honest,
-    "start_lying": become_dishonest,
-    "collusive_witness_recruited": collusive_witness_recruited,
-    "collusive_witness_fired": collusive_witness_fired,
-    "collusive_provider_recruited": collusive_provider_recruited,
-    "collusive_provider_fired": collusive_provider_fired,
-    "bs_bm_hostile_20": bs_bm_hostile_20,
-    "bs_bm_hostile_40": bs_bm_hostile_40,
-    "bs_bm_hostile_80": bs_bm_hostile_80,
+    # "stop_lying": become_honest,
+    # "start_lying": become_dishonest,
+    # "collusive_witness_recruited": collusive_witness_recruited,
+    # "collusive_witness_fired": collusive_witness_fired,
+    # "collusive_provider_recruited": collusive_provider_recruited,
+    # "collusive_provider_fired": collusive_provider_fired,
+    # "bs_bm_hostile_20": bs_bm_hostile_20,
+    # "bs_bm_hostile_40": bs_bm_hostile_40,
+    # "bs_bm_hostile_80": bs_bm_hostile_80,
+    "multiple_collusive_rings": multiple_collusive_rings,
 }
