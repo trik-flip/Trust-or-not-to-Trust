@@ -30,7 +30,7 @@ class CollusiveRing(Scenario):
         
         remaining_witnesses = witness_amount - ring_size
         for _ in range(remaining_witnesses):
-            self.independent.append(Witness(honesty=0, bad_mouthing=True))
+            self.independent.append(Witness(honesty=1, bad_mouthing=True))
 
         super().__init__(
             witnesses=witnesses,

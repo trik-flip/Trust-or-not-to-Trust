@@ -27,20 +27,19 @@ class MultiCollusiveRing(Scenario):
         self.ring_size = ring_size
         self.nr_rings = nr_rings
         self.rings = {}
-        witnesses: list[Witness] = []
+        collusive_witnesses = []
+        independent_witnesses = []
 
-        for _ in range(witness_amount):
-            witnesses.append(Witness(honesty=1, ballot_stuffing=True))
+        for _ in range(ring_size * nr_rings):
+            collusive_witnesses.append(Witness(honesty=1, ballot_stuffing=True))
 
-        temp_witness_list = self.witnesses.copy()
+        for _ in range(witness_amount - (ring_size * nr_rings)):
+            independent_witnesses.append(Witness(honesty=1, bad_mouthing=True))
+
         for ring in range(nr_rings):
-            self.rings[ring] = []
-            collusive_members = sample(
-                temp_witness_list, self.ring_size
-            )
-            for member in collusive_members:
-                member.add_to_ring(self.rings[ring])
-                temp_witness_list.remove(member)
+            selection = random.sample(collusive_witnesses, k = ring_size)
+            self.rings[ring] = [selection]
+            collusive_witnesses.remove(selection)
 
 
         super().__init__(
