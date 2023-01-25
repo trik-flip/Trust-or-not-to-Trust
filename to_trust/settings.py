@@ -64,7 +64,7 @@ collusive_provider_fired = FireWitness(**general_parameters, **fire_provider_par
 multi_collusive_rings = {
     # size of the ring
     "ring_size": 5,
-    # provider/provider ratio in ring
+    # number of rings
     "nr_rings": 5,
 }
 multiple_collusive_rings = MultiCollusiveRing(**general_parameters, **multi_collusive_rings)
