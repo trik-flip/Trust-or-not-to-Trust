@@ -110,7 +110,7 @@ become_honest_parameters = {
     # Percentage of witnesses that will start from being honest to being completely dishonest
     "witness_percentage_lying": 0.5,
     # Number of epochs before the witnesses become dishonest
-    "lying_epochs": 10,
+    "lying_epochs": 50,
     #
     "lying_mode": LyingMode.Bonus,
     "bonus": 0.2,
