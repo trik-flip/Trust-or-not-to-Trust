@@ -12,7 +12,7 @@ from to_trust.scenarios import (
 from to_trust.scenarios.stop_lying import StopLying
 
 epochs = 1
-runs = 200
+runs = 50
 ntcm_type = Act
 
 # Plotting settings
