@@ -5,7 +5,7 @@ from to_trust.agents import Consumer, Provider, Witness
 from to_trust.testbed import Scenario
 
 
-class FireWitness(Scenario):
+class FireProvider(Scenario):
     """A Scenario where witness are fired from a collusive ring"""
 
     def __init__(
@@ -49,12 +49,12 @@ class FireWitness(Scenario):
 
         return super().preprocess()
 
-    def update(self, _p, _c, witnesses):
+    def update(self, providers, _c, _w):
         if random() > self.change:
             return
         collusive_members = set()
 
-        for w in witnesses:
+        for w in providers:
             if len(w.ring) != 0:
                 collusive_members.add(w)
         if len(collusive_members) > 0:
