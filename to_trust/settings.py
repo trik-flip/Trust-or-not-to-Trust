@@ -1,5 +1,5 @@
 from methods import ITEA, Act, Travos, MET
-from scenarios import FireWitness, HostileEnvironment, RecruitWitness, StartLying
+from scenarios import FireWitness, HostileEnvironment, RecruitWitness, StartLying, MultiCollusiveRing
 from testbed import Simulation
 from to_trust import LyingMode
 
@@ -61,7 +61,13 @@ fire_provider_parameters = {
 collusive_provider_fired = FireWitness(**general_parameters, **fire_provider_parameters)
 
 # Multiple collusive rings
-# TODO: Chloe
+multi_collusive_rings = {
+    # size of the ring
+    "ring_size": 5,
+    # provider/provider ratio in ring
+    "nr_rings": 5,
+}
+multiple_collusive_rings = MultiCollusiveRing(**general_parameters, **multi_collusive_rings)
 
 # Witnesses become more dishonest over time
 become_dishonest_parameters = {
