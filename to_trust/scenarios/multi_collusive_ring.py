@@ -1,12 +1,16 @@
 # Chloe
-from random import choice, sample, random
+from random import sample
 
-from to_trust.agents import Consumer, Provider, Witness
+from to_trust.agents import Consumer, Provider, Witness, Agent
 from to_trust.testbed import Scenario
 
-class CollusiveRing(Scenario):
-    #There is a group working together (a collusive ring), they ballot-stuff each other.
-     def __init__(
+
+class MultiCollusiveRing(Scenario):
+    """
+    There are multiple groups working together (collusive rings), they ballot-stuff each other.
+    """
+
+    def __init__(
         self,
         *,
         witnesses: list[Witness] | None = None,
@@ -20,17 +24,26 @@ class CollusiveRing(Scenario):
         provider_options: dict[str, object] | None = {},
         consumer_as_witness=False,
         ring_size: int = 5,
-        ):
+        nr_rings: int = 5,
+    ):
         self.ring_size = ring_size
-        self.ring = []
-        self.independent = []
+        self.nr_rings = nr_rings
+        self.rings = {}
+        collusive_witnesses: list[Agent] = []
+        independent_witnesses = []
 
-        for _ in range(self.ring_size):
-            self.ring.append(Witness(honesty=1, ballot_stuffing=True))
-        
-        remaining_witnesses = witness_amount - ring_size
-        for _ in range(remaining_witnesses):
-            self.independent.append(Witness(honesty=1, bad_mouthing=True))
+        for _ in range(ring_size * nr_rings):
+            collusive_witnesses.append(Witness(honesty=1, ballot_stuffing=True))
+
+        for _ in range(witness_amount - (ring_size * nr_rings)):
+            independent_witnesses.append(Witness(honesty=1, bad_mouthing=True))
+
+        for ring in range(nr_rings):
+            selection = sample(collusive_witnesses, k=ring_size)
+            self.rings[ring] = []
+            for agent in selection:
+                agent.add_to_ring(self.rings[ring])
+                collusive_witnesses.remove(agent)
 
         super().__init__(
             witnesses=witnesses,
@@ -44,6 +57,3 @@ class CollusiveRing(Scenario):
             provider_amount=provider_amount,
             consumer_as_witness=consumer_as_witness,
         )
-            
-
-

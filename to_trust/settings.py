@@ -1,3 +1,12 @@
+from to_trust.methods import ITEA, Act, Travos, MET
+from to_trust.scenarios import (
+    FireWitness,
+    HostileEnvironment,
+    RecruitWitness,
+    StartLying,
+    MultiCollusiveRing,
+)
+from to_trust.testbed import Simulation
 from to_trust import LyingMode
 from to_trust.methods import ITEA, MET, Act, Travos
 from to_trust.scenarios import (
@@ -95,10 +104,27 @@ collusive_provider_fired = FireProvider(
 )
 
 # Multiple collusive rings
-# TODO: Chloe
+multi_collusive_rings = {
+    # size of the ring
+    "ring_size": 5,
+    # number of rings
+    "nr_rings": 5,
+}
+multiple_collusive_rings = MultiCollusiveRing(
+    **general_parameters, **multi_collusive_rings
+)
 
-# Witnesses become more honest over time
-# TODO: Rita
+# Witnesses become more dishonest over time
+become_dishonest_parameters = {
+    # Percentage of witnesses that will start from being honest to being completely dishonest
+    "witness_percentage_lying": 0.5,
+    # Number of epochs before the witnesses become dishonest
+    "honest_epochs": 50,
+    #
+    "lying_mode": LyingMode.Bonus,
+    "bonus": 0.2,
+}
+become_dishonest = StartLying(**general_parameters, **become_dishonest_parameters)
 
 # Mixed world where 20% to 80% of the witnesses are lying either by ballot-stuffing or badmouthing
 bs_bm_hostile_20_parameters = {
