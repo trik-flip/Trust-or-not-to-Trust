@@ -3,14 +3,14 @@ from to_trust.agents import Consumer, Provider, Witness, LyingMode
 from to_trust.testbed import Scenario
 
 
-class StartLying(Scenario):
+class StopLying(Scenario):
     # There is an environment where agents start being honest,
     # but eventually start lying.
     def __init__(
         self,
         witness_amount: int = 0,
         witness_percentage_lying: float = 1,
-        honest_epochs: int = 0,
+        lying_epochs: int = 0,
         # ratio_honest_epochs: int = 1,
         consumers: list[Consumer] | None = None,
         consumer_amount: int = 0,
@@ -29,11 +29,11 @@ class StartLying(Scenario):
         for _ in range(witnesses_to_lie):
             witnesses.append(
                 Witness(
-                    honesty=1,
+                    honesty=0,
                     change_honesty=True,
-                    epochs_before_dishonest=honest_epochs,
+                    epochs_before_dishonest=lying_epochs,
                     lying_mode=lying_mode,
-                    honesty_step=-0.1,
+                    honesty_step=0.1,
                     bonus=bonus,
                 )
             )

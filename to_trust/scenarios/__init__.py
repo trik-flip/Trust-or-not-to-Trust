@@ -7,3 +7,4 @@ from .hostile_environment import HostileEnvironment
 from .multi_collusive_ring import MultiCollusiveRing
 from .Simple import Simple
 from .start_lying import StartLying
+from .stop_lying import StopLying

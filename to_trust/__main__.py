@@ -12,7 +12,6 @@ from to_trust.settings import (
     plot_run,
     runs,
     scenarios,
-    simulation,
 )
 from to_trust.testbed.simulation import Simulation
 

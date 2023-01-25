@@ -1,4 +1,3 @@
-# Benedikt
 from to_trust.agents import Witness, LyingMode
 from to_trust.testbed import Scenario
 

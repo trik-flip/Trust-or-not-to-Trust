@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 
 class Singleton(type):
-    _instances: dict[type, object] = {}
+    _instances = {}
 
     def __call__(cls, *args: Any, **kwargs: dict[str, Any]):
         if cls not in cls._instances:
@@ -14,6 +14,10 @@ class Singleton(type):
 class ToDoException(Exception):
     def __str__(self):
         return f"This method is not implemented!"
+
+
+class TimerException(Exception):
+    pass
 
 
 def log(func: Callable[[Any], Any]):
@@ -31,7 +35,7 @@ class Profiler:
     ns = 1
 
     def __init__(self) -> None:
-        self.funcs = {}
+        self.functions = {}
         self.timers: dict[str, dict[str, list[int] | int]] = {}
 
     def switch(self, name1: str, name2: str):
@@ -46,14 +50,14 @@ class Profiler:
 
     def stop(self, name: str = "main"):
         if name not in self.timers:
-            raise Exception(f"{name} is not a valid timer")
+            raise TimerException(f"{name} is not a valid timer")
 
         self.timers[name]["stop"] += [time_ns()]  # type: ignore
         self.timers[name]["hits"] += 1  # type: ignore
 
     def total_time(self, name: str = "main") -> int:
         if name not in self.timers:
-            raise Exception(f"{name} is not a valid timer")
+            raise TimerException(f"{name} is not a valid timer")
 
         if len(self.timers[name]["start"]) != self.timers[name]["hits"]:  # type: ignore
             print(f"[WARNING] - {name} timer is not stopped")
@@ -64,7 +68,7 @@ class Profiler:
             total += stop - start  # type: ignore
         return total  # type: ignore
 
-    def profile(self, func: Callable[[Any], Any]):
+    def profile(self, func):
 
         name = f"Function:{func.__name__}"
         self.timers[name] = {"start": [], "stop": [], "hits": 0}
@@ -78,7 +82,7 @@ class Profiler:
         return new_func
 
     def result(self):
-        all_times: list[tuple[Any, Any]] = list(self.funcs.items())  # type: ignore
+        all_times: list[tuple[Any, Any]] = list(self.functions.items())  # type: ignore
         for _f, v in all_times:
             v["time per call"] = (
                 "not called" if v["hits"] == 0 else v["time"] / v["hits"]

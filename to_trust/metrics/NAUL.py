@@ -4,7 +4,9 @@ from .metrics import MetricSystem
 
 
 @MetricSystem.register("Naul")
-def Naul(consumers: dict[Consumer, float], providers, epochs):
+def normalized_average_utility_leftover(
+    consumers: dict[Consumer, list[float]], providers, epochs
+):
     T = epochs
     N = len(consumers)
     total = 0.0

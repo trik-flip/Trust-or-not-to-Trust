@@ -24,7 +24,7 @@ class Witness(Agent):
         ballot_stuffing: bool = False,
         lying_mode: LyingMode = LyingMode.Bonus,
         bad_mouthing: bool = False,
-        starts_lying: bool = False,
+        change_honesty: bool = False,
         epochs_before_dishonest: int = 0,
     ) -> None:
         super().__init__()
@@ -36,8 +36,8 @@ class Witness(Agent):
         self.lying_mode = lying_mode
         self.bad_mouthing = bad_mouthing
         self.honesty_step = honesty_step
-        self.starts_lying = starts_lying
-        self.epochs_before_dishonest = epochs_before_dishonest
+        self.change_honesty = change_honesty
+        self.epochs_before_change = epochs_before_dishonest
 
     @profiler.profile
     def score_of(self, provider: Provider) -> float:
@@ -46,25 +46,24 @@ class Witness(Agent):
         ret_val: float = self.scores[provider]
 
         if not self.honest():
-            match(provider in self.ring, self.lying_mode):
-                case(True, LyingMode.Fixed):
+            match (provider in self.ring, self.lying_mode):
+                case (True, LyingMode.Fixed):
                     ret_val = self.bonus
-                case(True, LyingMode.Bonus):
+                case (True, LyingMode.Bonus):
                     ret_val += self.bonus if self.ballot_stuffing else 0
-                case(True, LyingMode.Inverse):
-                    pass
-                case(False, LyingMode.Fixed):
+                # case(True, LyingMode.Inverse):
+                #     pass
+                case (False, LyingMode.Fixed):
                     ret_val = 1 - self.bonus
-                case(False, LyingMode.Bonus):
+                case (False, LyingMode.Bonus):
                     if self.bad_mouthing:
                         ret_val -= self.bonus
                     elif self.ballot_stuffing and len(self.ring) == 0:
                         ret_val += self.bonus
-                case(False, LyingMode.Inverse):
+                case (False, LyingMode.Inverse):
                     ret_val = 1 - ret_val
 
-        return min(1., max(.0, ret_val))
-
+        return min(1.0, max(0.0, ret_val))
 
     def honest(self):
         return self.honesty >= random()
@@ -75,8 +74,8 @@ class Witness(Agent):
 
     @profiler.profile
     def update(self) -> None:
-        if self.starts_lying and self.epoch == self.epochs_before_dishonest:
-            self.becomes_dishonest()
+        if self.change_honesty and self.epoch == self.epochs_before_change:
+            self.honesty += self.honesty_step
         self.epoch += 1
 
     @profiler.profile
@@ -84,8 +83,8 @@ class Witness(Agent):
         # TODO: what should the value be?
         self.scores = {p: (p.chance * p.quality) - p.cost for p in providers}
 
-    def choose_provider(self):
+    def choose_provider(self) -> Provider:
         return choice(self.scores.keys())
 
     def update_provider(self, p, score):
-        pass
+        return

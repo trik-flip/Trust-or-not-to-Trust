@@ -1,27 +1,18 @@
-from to_trust.methods import ITEA, Act, Travos, MET
-from to_trust.scenarios import (
-    FireWitness,
-    HostileEnvironment,
-    RecruitWitness,
-    StartLying,
-    MultiCollusiveRing,
-)
-from to_trust.testbed import Simulation
 from to_trust import LyingMode
 from to_trust.methods import ITEA, MET, Act, Travos
 from to_trust.scenarios import (
     FireProvider,
     FireWitness,
     HostileEnvironment,
+    MultiCollusiveRing,
     RecruitProvider,
     RecruitWitness,
     StartLying,
 )
-from to_trust.testbed import Simulation
+from to_trust.scenarios.stop_lying import StopLying
 
-Scenario_type = StartLying
 epochs = 1
-runs = 50
+runs = 200
 ntcm_type = Act
 
 # Plotting settings
@@ -46,12 +37,12 @@ general_parameters = {
     "provider_amount": 50,
     "provider_options": {
         "chance": None,
-        "quality": None,
-        "cost": None,
         "l_chance": 0.5,
         "u_chance": 0.85,
+        "quality": None,
         "l_quality": 0.75,
         "u_quality": 0.99,
+        "cost": None,
         "l_cost": 0.1,
         "u_cost": 0.3,
     },
@@ -115,6 +106,17 @@ multiple_collusive_rings = MultiCollusiveRing(
 )
 
 # Witnesses become more dishonest over time
+become_honest_parameters = {
+    # Percentage of witnesses that will start from being honest to being completely dishonest
+    "witness_percentage_lying": 0.5,
+    # Number of epochs before the witnesses become dishonest
+    "honest_epochs": 50,
+    #
+    "lying_mode": LyingMode.Bonus,
+    "bonus": 0.2,
+}
+become_honest = StopLying(**general_parameters, **become_honest_parameters)
+
 become_dishonest_parameters = {
     # Percentage of witnesses that will start from being honest to being completely dishonest
     "witness_percentage_lying": 0.5,
@@ -128,9 +130,9 @@ become_dishonest = StartLying(**general_parameters, **become_dishonest_parameter
 
 # Mixed world where 20% to 80% of the witnesses are lying either by ballot-stuffing or badmouthing
 bs_bm_hostile_20_parameters = {
-    # % of wtnesses badmouthing
+    # % of witnesses badmouthing
     "bm_pct": 0.1,
-    # % of wtnesses ballot-stuffing
+    # % of witnesses ballot-stuffing
     "bs_pct": 0.1,
     # Bonus: adds/subtract bonus to provider value
     # Fixed: gives a fixed value for the providers
@@ -165,6 +167,8 @@ bs_bm_hostile_80 = HostileEnvironment(
 )
 
 scenarios = {
+    "stop_lying": become_honest,
+    "start_lying": become_dishonest,
     "collusive_witness_recruited": collusive_witness_recruited,
     "collusive_witness_fired": collusive_witness_fired,
     "collusive_provider_recruited": collusive_provider_recruited,
@@ -173,11 +177,3 @@ scenarios = {
     "bs_bm_hostile_40": bs_bm_hostile_40,
     "bs_bm_hostile_80": bs_bm_hostile_80,
 }
-
-scenario = Scenario_type(
-    consumer_amount=5,
-    provider_amount=5,
-    witness_amount=50,
-    provider_options={"chance": 0.7, "l_quality": 0.8, "l_cost": 0.2, "u_cost": 0.5},
-)
-simulation = Simulation(scenario, ntcm_type, runs)

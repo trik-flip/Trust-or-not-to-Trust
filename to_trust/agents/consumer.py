@@ -52,4 +52,4 @@ class Consumer(Witness):
 
     @profiler.profile
     def update(self, *_):
-        pass
+        return

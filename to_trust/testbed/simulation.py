@@ -41,11 +41,13 @@ class Simulation:
     def runs(self, n: int = 5, printing=False):
         for i in range(n):
             if printing:
-                print(f"Epoch: {i}")
+                print(f"Simulation run: {i}")
             yield self.run(printing)
 
     @profiler.profile
-    def run(self, printing=False):
+    def run(
+        self, printing=False
+    ) -> list[tuple[dict[Consumer, list[float]], dict[Provider, list[float]]]]:
         self.clean()
         true_values: dict[Provider, list[float]] = {p: [] for p in self.providers}
         last_value = {p: 0.0 for p in self.providers}
@@ -70,8 +72,6 @@ class Simulation:
                 consumer.update()
             for witness in self.witnesses:
                 witness.update()
-            # for provider in self.providers:
-            #     provider.update()
             self.scenario.update(self.providers, self.consumers, self.witnesses)
             profiler.stop("Simulation: epoch")
         self.runs_data.append((scores, true_values))

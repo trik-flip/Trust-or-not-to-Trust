@@ -10,8 +10,8 @@ class Act(Consumer):
     - [x] [1]: Gamma = Nij / Nmin if Nij < Nmin else 1
     - [x] [2]: Nmin = - (1/(2epsilon**2))*ln((1 - theta)/ 2)
     - [x] [3]: direct_trust[p] = (alpha[p] + 1)/(alpha[p] + beta[p] + 2)
-        - [] [3.1]: alpha = successful interactions between p and self,
-        - [] [3.2]: beta = unsuccessful interactions between p and self,
+        - [x] [3.1]: alpha = successful interactions between p and self,
+        - [x] [3.2]: beta = unsuccessful interactions between p and self,
     - [x] [4]: r[p] = u[p]*(G-C[p]) - (1-u[p]) * C[p]
     - [x] [5]: u[p] = 0 if O[p]==0 or D[p] == 1 elif O[p]==0 or D[p] == 1 then 1
     - [x] [6]: theta[w] [p] =1 /T[w] sum
@@ -40,14 +40,14 @@ class Act(Consumer):
         delta=0.5,
         epsilon=0.5,
         G=0.5,
-        M=3,
+        magnitude=3,
         p_direct=0.5,
         p_indirect=0.5,
-        P=0.5,
+        penalty=0.5,
         phi=0.5,
         pr_min=0.3,
-        Th=0.5,
-        R=0.5,
+        threshold=0.75,
+        reward=0.5,
         r_tilde_direct=0.5,
         rho=0.5,
         small_theta=0.5,
@@ -56,30 +56,32 @@ class Act(Consumer):
         self._alpha = {}
         self._beta = {}
         self._D = {}
-        self._delta = delta
+        self._delta_bias_towards_penalizing_collusion = delta
         self._epsilon = epsilon
         self._G = G
-        self._M = M
+        self._Magnitude = magnitude
         self._O = {}
         self._p = {}
         self._p_direct = p_direct
         self._p_indirect = p_indirect
-        self._penalty = P
+        self._penalty = penalty
         self._phi = phi
         self._r_tilde = {}
-        self._reward = R
+        self._reward = reward
         self._r_tilde_direct = r_tilde_direct
-        self._rho = rho
+        self._rho_learning_rate = rho
         self._small_theta = small_theta
-        self._test = {}
-        self._Th = Th
-        self._pr_min = pr_min
-        self._pr = 1
+        self._testimonies = {}
+        self._Threshold = threshold
+        self._min_exploration_probability = pr_min
+        self._exploration_probability = 1
 
     @profiler.profile
     def update(self):
         super().update()
-        self._pr = max(self._pr_min, self._pr - 0.2)
+        self._exploration_probability = max(
+            self._min_exploration_probability, self._exploration_probability - 0.2
+        )
 
     @profiler.profile
     def _gamma(self, p: Provider):
@@ -89,11 +91,10 @@ class Act(Consumer):
 
     @profiler.profile
     def _N(self, p: Provider):
+        """total number of interactions with Provider $p$"""
         return self._alpha[p] + self._beta[p]
 
-    """number of interactions"""
-    _M: int
-    """Magnitude"""
+    _Magnitude: int
 
     @property
     @profiler.profile
@@ -107,10 +108,13 @@ class Act(Consumer):
 
     @profiler.profile
     def _direct_trust(self, p: Provider, _t: int):
+        """Computing direct trust with the BRS method"""
         return (self._alpha[p] + 1) / (self._alpha[p] + self._beta[p] + 2)
 
     _alpha: dict[Provider, int]
+    """Number of positive interactions per Provider"""
     _beta: dict[Provider, int]
+    """Number of negative interactions per Provider"""
 
     @profiler.profile
     def _r(self, p: Provider):
@@ -137,38 +141,36 @@ class Act(Consumer):
 
     @profiler.profile
     def _theta(self, w: Witness, p: Provider):
-        return (1 / len(self._test[w][p])) * sum(
+        return (1 / len(self._testimonies[w][p])) * sum(
             self._d(w, p, t) * (1 - self._O[p][t])
-            for t, _ in enumerate(self._test[w][p])
+            for t, _ in enumerate(self._testimonies[w][p])
         )
 
     @profiler.profile
     def _d(self, w: Witness, p: Provider, t: int):
-        return self._test[w][p][t] >= self._Th
+        return self._testimonies[w][p][t] >= self._Threshold
 
-    _test: dict[Witness, dict[Provider, list[float]]]
-    """testimony"""
-    _Th: float
-    """predefined threshold"""
+    _testimonies: dict[Witness, dict[Provider, list[float]]]
+    _Threshold: float
     _p: dict[Witness, dict[Provider, float]]
 
     @profiler.profile
     def _update_p(self, w: Witness, p: Provider):
-        self._p[w][p] = self._p[w][p] + self._rho * (
-            self._r(p) - self._r_tilde[p] - self._delta * self._theta(w, p)
+        self._p[w][p] = self._p[w][p] + self._rho_learning_rate * (
+            self._r(p)
+            - self._r_tilde[p]
+            - self._delta_bias_towards_penalizing_collusion * self._theta(w, p)
         ) * (1 - self._pi(w, p))
 
-    _rho: float
-    """learning rate"""
-    _delta: float
-    """bias towards penalizing collusion"""
+    _rho_learning_rate: float
+    _delta_bias_towards_penalizing_collusion: float
 
     @profiler.profile
     def _pi(self, w: Witness, p: Provider):
         return (e ** self._p[w][p]) / sum(e ** self._p[_w][p] for _w in self.witnesses)
 
     _r_tilde: dict[Provider, float]
-    """total accumulated reward """
+    """total accumulated reward"""
 
     @profiler.profile
     def _update_r_tilde(self, p: Provider):
@@ -202,14 +204,14 @@ class Act(Consumer):
 
     @profiler.profile
     def _Dd(self, p: Provider, t: int):
-        if self._direct_trust(p, t) >= self._Th:
+        if self._direct_trust(p, t) >= self._Threshold:
             return True
         return False
 
     # 15, called 0x
     @profiler.profile
     def _update_p_direct(self):
-        self._p_direct = self._p_direct + self._rho * (
+        self._p_direct = self._p_direct + self._rho_learning_rate * (
             self._r_direct() - self._r_tilde_direct
         ) * (1 - self._pi_direct())
 
@@ -241,13 +243,14 @@ for the trustworthiness of s_j using the latest γ_ij value"""
         return exp(self._p_indirect) / (exp(self._p_direct) + exp(self._p_indirect))
 
     @profiler.profile
-    def _rep(self, p: Provider, t: int):
+    def _reputation_of(self, p: Provider, t: int):
+        """Compute the reputation of provider $p$ at time step $t$"""
         return self._gamma(p) * self._direct_trust(p, t) + (
             1 - self._gamma(p)
         ) * self._indirect_trust(p, t)
 
-    _pr: float
-    _pr_min: float
+    _exploration_probability: float
+    _min_exploration_probability: float
 
     @profiler.profile
     def register_providers(self, providers: list[Provider]):
@@ -262,7 +265,7 @@ for the trustworthiness of s_j using the latest γ_ij value"""
     def register_witnesses(self, witnesses: list[Witness]):
         super().register_witnesses(witnesses)
         self._p = {w: {p: 0 for p in self.providers} for w in witnesses}
-        self._test = {w: {p: [] for p in self.providers} for w in witnesses}
+        self._testimonies = {w: {p: [] for p in self.providers} for w in witnesses}
 
     @profiler.profile
     def choose_provider(self):
@@ -272,7 +275,9 @@ for the trustworthiness of s_j using the latest γ_ij value"""
     def _testimony_aggregation(self):
         exploration_probability = random()  # 2
         # 3
-        if exploration_probability <= self._pr and len(self._unknown_providers()):
+        if exploration_probability <= self._exploration_probability and len(
+            self._unknown_providers()
+        ):
             return choice(self._unknown_providers())  # 4
         known_sp = sorted(
             self._known_providers(),
@@ -281,10 +286,9 @@ for the trustworthiness of s_j using the latest γ_ij value"""
         )  # 5, 6
         for p in known_sp:  # 7
             for w in self._top_witnesses:
-                self._test[w][p] += [w.score_of(p)]  # 8
-        # self.providers = {p: self._rep(p, self._t) for p in self.providers}
+                self._testimonies[w][p] += [w.score_of(p)]  # 8
         for p in self.providers:
-            self.scores[p] = self._rep(p, self.epoch)
+            self.scores[p] = self._reputation_of(p, self.epoch)
         # 10, 11, 12
         return sorted(self.scores, key=lambda p: self.scores[p], reverse=True)[0]
 
@@ -295,7 +299,7 @@ for the trustworthiness of s_j using the latest γ_ij value"""
         total_error = sum(self.MAE)
         self.MAE.append((current_error + total_error) / (len(self.MAE) + 1))
 
-        self._O[p].append(score >= self._Th)
+        self._O[p].append(score >= self._Threshold)
         self._D[p].append(True)
         for _p in self.providers:
             if _p != p:
@@ -303,7 +307,7 @@ for the trustworthiness of s_j using the latest γ_ij value"""
                 self._D[_p].append(False)
 
         # 14
-        if score >= self._Th:
+        if score >= self._Threshold:
             self._alpha[p] += 1
         else:
             self._beta[p] += 1
@@ -321,9 +325,9 @@ for the trustworthiness of s_j using the latest γ_ij value"""
 
     @property
     @profiler.profile
-    def _top_witnesses(self):
+    def _top_witnesses(self) -> list[Witness]:
         witnesses = sorted(self.witnesses.items(), key=lambda w: w[1], reverse=True)
-        return [w[0] for w in witnesses[: self._M]]
+        return [w[0] for w in witnesses[: self._Magnitude]]
 
     def _unknown_providers(self):
         return [p for p in self.providers if self._N(p) == 0]

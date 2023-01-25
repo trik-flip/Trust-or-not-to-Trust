@@ -5,7 +5,9 @@ from to_trust.agents.consumer import Consumer
 from to_trust.agents.provider import Provider
 from to_trust.util import Singleton
 
-MetricFunction = Callable[[dict[Consumer, float], dict[Provider, float], int], float]
+MetricFunction = Callable[
+    [dict[Consumer, list[float]], dict[Provider, list[float]], int], float
+]
 
 
 class MetricSystem(metaclass=Singleton):
@@ -28,5 +30,5 @@ class MetricSystem(metaclass=Singleton):
             print(f"{metrics}: {self._metric_methods[metrics](*args)}")
 
     @staticmethod
-    def average(agents: dict[Agent, float]):
+    def average(agents: dict[Agent, list[float]]):
         return sum(sum(agents[_a]) for _a in agents) / len(agents)
