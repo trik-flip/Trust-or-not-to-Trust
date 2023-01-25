@@ -12,7 +12,7 @@ class MET(Consumer):
     """
     def __init__(self,
                 num_generations = 10,
-                size_network = 25,
+                size_network = 5,
                 p_local = 0.8,
                 cr = 0.6,
                 pm = 0.05,
